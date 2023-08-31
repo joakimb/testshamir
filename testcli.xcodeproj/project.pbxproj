@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1512C2CC2A9F34F70077EB09 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1512C2CB2A9F34F70077EB09 /* main.swift */; };
+		1529F6DD2A9F5DFC00F0CD5E /* SwiftECC in Frameworks */ = {isa = PBXBuildFile; productRef = 1529F6DC2A9F5DFC00F0CD5E /* SwiftECC */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -32,6 +33,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1529F6DD2A9F5DFC00F0CD5E /* SwiftECC in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +80,9 @@
 			dependencies = (
 			);
 			name = testcli;
+			packageProductDependencies = (
+				1529F6DC2A9F5DFC00F0CD5E /* SwiftECC */,
+			);
 			productName = testcli;
 			productReference = 1512C2C82A9F34F70077EB09 /* testcli */;
 			productType = "com.apple.product-type.tool";
@@ -106,6 +111,9 @@
 				Base,
 			);
 			mainGroup = 1512C2BF2A9F34F70077EB09;
+			packageReferences = (
+				1529F6DB2A9F5DFC00F0CD5E /* XCRemoteSwiftPackageReference "SwiftECC" */,
+			);
 			productRefGroup = 1512C2C92A9F34F70077EB09 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -284,6 +292,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1529F6DB2A9F5DFC00F0CD5E /* XCRemoteSwiftPackageReference "SwiftECC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/leif-ibsen/SwiftECC";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1529F6DC2A9F5DFC00F0CD5E /* SwiftECC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1529F6DB2A9F5DFC00F0CD5E /* XCRemoteSwiftPackageReference "SwiftECC" */;
+			productName = SwiftECC;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1512C2C02A9F34F70077EB09 /* Project object */;
 }
