@@ -33,12 +33,12 @@ func gShamirShare(t: Int, n: Int) throws -> (alphas: Array<BInt>, shares: Array<
     
     var shares = Array<BInt>()
     var alphas = Array<BInt>()//(1...n)
-    for xx in 1...n {
-        let x = BInt(xx)
-        alphas.append(x)
+    for x in 1...n {
+        let alpha = BInt(x)
+        alphas.append(alpha)
         var sum = BInt(0)
         for i in 0...(coeffs.count-1) {
-            sum += (coeffs[i] * x ** i) % domain.order
+            sum += (coeffs[i] * alpha ** i).mod(domain.order)
         }
         shares.append(sum)
     }
@@ -51,8 +51,8 @@ func lagX(alphas: Array<BInt>, i: Int) -> BInt {
         if (i == j){ continue}
         let nom = BInt.ZERO - alphas[j]
         let den = alphas[i] - alphas[j]
-        let frac = nom * den.modInverse(domain.order) % domain.order
-        prod *= frac
+        let frac = nom * den.modInverse(domain.order)
+        prod *= frac.mod(domain.order)
     }
     return prod
 }
@@ -65,10 +65,12 @@ func gShamirRec(shares: Array<BInt>, t: Int, alphas: Array<BInt>) throws -> BInt
     
     var sum = BInt(0)
     for i in 0...(alphas.count-1) {
-        sum += shares[i] + lagX(alphas: alphas, i: i) % domain.order
+//        print("term: "  , (lagX(alphas: alphas, i: i).mod(domain.order)), shares[i])
+//        print("w", lagX(alphas: alphas, i: i).mod(domain.order) * shares[i].mod(domain.order))
+        sum +=  lagX(alphas: alphas, i: i).mod(domain.order) * shares[i].mod(domain.order)
     }
-    
-    return sum
+    print()
+    return sum.mod(domain.order)
 }
 
 let t = 1// t+1 needed to reconstruct
