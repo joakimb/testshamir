@@ -11,7 +11,7 @@ import BigInt
 //let domain = Domain.instance(curve: .EC256r1)
 //toy domain
 let domain = try Domain.instance(name: "EC29", p: BInt(29), a: BInt(4), b: BInt(20), gx: BInt(1), gy: BInt(5), order: BInt(37), cofactor: 1)
-
+print("group order \(domain.order)")
 // Rand int mod p
 func randZp() -> BInt {
     return (domain.order - BInt.ONE).randomLessThan() + BInt.ONE
@@ -21,81 +21,62 @@ func toPoint(x: BInt) throws -> Point {
     return try domain.multiplyPoint(domain.g, x)
 }
 
-
-//Diffie Hellman experiment
-//let r = randZp()
-//print("r", r)
-//let R = try toPoint(domain: domain, x: r)
-//print("R", R)
-//
-//let a = BInt(1)
-//let b = BInt(2)
-//let A = try toPoint(domain: domain, x: a)
-//let B = try toPoint(domain: domain, x: b)
-//
-//let dh1 = try domain.multiplyPoint(A, b)
-//let dh2 = try domain.multiplyPoint(B, a)
-//print("dh1", dh1)
-//print("dh2", dh2)
-
-func gShamirShare(S: Point, t: Int, n: Int) throws -> Array<Point> {
+func gShamirShare(t: Int, n: Int) throws -> (alphas: Array<BInt>, shares: Array<BInt>) {
     
     var coeffs = Array<BInt>()
-//    for _ in 0...(t) {
+    coeffs.append(BInt(0))
+    for _ in 1...(t) {
 //        coeffs.append(randZp())
-//    }
-    coeffs.append(BInt(5))
-    coeffs.append(BInt(6))
-    
-    var shares = Array<Point>()
-    for x in 0...n {
-        var evalpoly = coeffs.enumerated()
-            .map{ (i,coeff) in coeff * BInt(x) ** i } //build terms of polynomial evaluated at x
-            .reduce(BInt(0),+) //sum them up
-        let share = try domain.addPoints(S, toPoint(x:evalpoly))
-        shares.append(share)
+        coeffs.append(BInt(6))
     }
-    return shares
+    print("coeffs", coeffs)
+    
+    var shares = Array<BInt>()
+    var alphas = Array<BInt>()//(1...n)
+    for xx in 1...n {
+        let x = BInt(xx)
+        alphas.append(x)
+        var sum = BInt(0)
+        for i in 0...(coeffs.count-1) {
+            sum += (coeffs[i] * x ** i) % domain.order
+        }
+        shares.append(sum)
+    }
+    return (alphas, shares)
 }
 
-func lagX(indexes: Array<Int>, i: Int) -> BInt {
-    var prod = 1
-    for j in indexes {
+func lagX(alphas: Array<BInt>, i: Int) -> BInt {
+    var prod = BInt(1)
+    for j in 0...alphas.count-1 {
         if (i == j){ continue}
-        let nom = indexes[0] - indexes[j]
-        let den = indexes[i] - indexes[j]
-        prod *= nom / den
-        print(String(i) + ": nom : " + String(nom))
-        print(String(i) + ": den : "  + String(den))
-        print(String(i) + ": nom/den : " + String(nom/den))
+        let nom = BInt.ZERO - alphas[j]
+        let den = alphas[i] - alphas[j]
+        let frac = nom * den.modInverse(domain.order) % domain.order
+        prod *= frac
     }
-    print("lambda_" + String(i) + " : " + String(prod))
-    return BInt(prod)
+    return prod
 }
 
-func gShamirRec(shares: Array<Point>, t: Int, indexes: Array<Int>) throws -> Point {
+func gShamirRec(shares: Array<BInt>, t: Int, alphas: Array<BInt>) throws -> BInt {
     
-    if (indexes.count != t+1 || shares.count != t+1) {
+    if (alphas.count != t+1 || alphas.count != t+1) {
         throw NSError()
     }
     
-    let S = try zip(indexes,shares)
-        .map{(i, share) in
-            try domain.multiplyPoint(share, lagX(indexes: indexes, i: i))
-        }
-        .reduce(try toPoint(x:BInt.ZERO), {(x: Point, y: Point) in try domain.addPoints(x,y)}) //sum
-    return S
+    var sum = BInt(0)
+    for i in 0...(alphas.count-1) {
+        sum += shares[i] + lagX(alphas: alphas, i: i) % domain.order
+    }
+    
+    return sum
 }
 
-let t = 1
-let n = 2
-let secret = try toPoint(x: BInt(1))
+let t = 1// t+1 needed to reconstruct
+let n = 3
 
-let shares = try gShamirShare(S: secret, t: t, n: n)
-print("secret", secret)
-print("shares", shares)
-print("reconstruct with",shares[0...t])
-let indexes = Array(0...t)
-print("indexes", indexes)
-
-print("rec",try gShamirRec(shares: Array(shares[0...t]), t: t, indexes: indexes))
+let sharing = try gShamirShare(t: t, n: n)
+print("shares", sharing.shares)
+let reconstruct = (alphas: Array(sharing.alphas[1...t+1]), shares: Array(sharing.shares[1...t+1]))
+print("reconstruct shares", reconstruct.shares)
+print("reconstruct indexes", reconstruct.alphas)
+print("rec",try gShamirRec(shares: reconstruct.shares, t: t, alphas: reconstruct.alphas))
