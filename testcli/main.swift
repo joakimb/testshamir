@@ -17,11 +17,11 @@ func randZp() -> BInt {
     return (domain.order - BInt.ONE).randomLessThan() + BInt.ONE
 }
 
-func toPoint(x: BInt) throws -> Point {
+func toPoint(_ x: BInt) throws -> Point {
     return try domain.multiplyPoint(domain.g, x)
 }
 
-func gShamirShare(t: Int, n: Int) throws -> (alphas: Array<BInt>, shares: Array<BInt>) {
+func gShamirShare(S: Point, t: Int, n: Int) throws -> (alphas: Array<BInt>, shares: Array<Point>) {
     
     var coeffs = Array<BInt>()
     coeffs.append(BInt(0))
@@ -31,7 +31,7 @@ func gShamirShare(t: Int, n: Int) throws -> (alphas: Array<BInt>, shares: Array<
     }
     print("coeffs", coeffs)
     
-    var shares = Array<BInt>()
+    var shares = Array<Point>()
     var alphas = Array<BInt>()//(1...n)
     for x in 1...n {
         let alpha = BInt(x)
@@ -40,7 +40,8 @@ func gShamirShare(t: Int, n: Int) throws -> (alphas: Array<BInt>, shares: Array<
         for i in 0...(coeffs.count-1) {
             sum += (coeffs[i] * alpha ** i).mod(domain.order)
         }
-        shares.append(sum)
+        //shares.append(S + sum)
+        shares.append(try domain.addPoints(S, toPoint(sum)))
     }
     return (alphas, shares)
 }
@@ -57,26 +58,34 @@ func lagX(alphas: Array<BInt>, i: Int) -> BInt {
     return prod
 }
 
-func gShamirRec(shares: Array<BInt>, t: Int, alphas: Array<BInt>) throws -> BInt {
+func gShamirRec(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point{
     
     if (alphas.count != t+1 || alphas.count != t+1) {
         throw NSError()
     }
     
-    var sum = BInt(0)
+    //var sum = BInt(0)
+    var sum = try toPoint(BInt.ZERO)
     for i in 0...(alphas.count-1) {
 //        print("term: "  , (lagX(alphas: alphas, i: i).mod(domain.order)), shares[i])
 //        print("w", lagX(alphas: alphas, i: i).mod(domain.order) * shares[i].mod(domain.order))
-        sum +=  lagX(alphas: alphas, i: i).mod(domain.order) * shares[i].mod(domain.order)
+        //sum +=  lagX(alphas: alphas, i: i).mod(domain.order) * shares[i].mod(domain.order)
+        let lambda = lagX(alphas: alphas, i: i).mod(domain.order)
+        let term = try domain.multiplyPoint(shares[i], lambda)
+        
+        sum = try domain.addPoints(sum, term)// <#T##p2: Point##Point#>)   * shares[i].mod(domain.order)
     }
-    print()
-    return sum.mod(domain.order)
+    return sum
 }
 
 let t = 1// t+1 needed to reconstruct
 let n = 3
 
-let sharing = try gShamirShare(t: t, n: n)
+//let S = BInt(34)
+let S = try toPoint(BInt(34))
+print("secret", S)
+
+let sharing = try gShamirShare(S: S, t: t, n: n)
 print("shares", sharing.shares)
 let reconstruct = (alphas: Array(sharing.alphas[1...t+1]), shares: Array(sharing.shares[1...t+1]))
 print("reconstruct shares", reconstruct.shares)
