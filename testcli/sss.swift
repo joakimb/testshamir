@@ -9,7 +9,7 @@ import Foundation
 import SwiftECC
 import BigInt
 
-func gShamirShare(S: Point, t: Int, n: Int) throws -> (alphas: Array<BInt>, shares: Array<Point>) {
+func gShamirShare(alphas: Array<BInt>, S: Point, t: Int, n: Int) throws -> Array<Point> {
     
     var coeffs = Array<BInt>()
     coeffs.append(BInt(0))
@@ -18,17 +18,16 @@ func gShamirShare(S: Point, t: Int, n: Int) throws -> (alphas: Array<BInt>, shar
     }
     
     var shares = Array<Point>()
-    var alphas = Array<BInt>()//(1...n)
     for x in 1...n {
-        let alpha = BInt(x)
-        alphas.append(alpha)
+        let alpha = alphas[x]
+        print(alpha)
         var sum = BInt(0)
         for i in 0...(coeffs.count-1) {
             sum += (coeffs[i] * alpha ** i).mod(domain.order)
         }
         shares.append(try domain.addPoints(S, toPoint(sum)))
     }
-    return (alphas, shares)
+    return shares
 }
 
 func lagX(alphas: Array<BInt>, i: Int) -> BInt {

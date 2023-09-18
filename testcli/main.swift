@@ -9,11 +9,14 @@ import Foundation
 import BigInt
 
 
-let t = 10// t+1 needed to reconstruct
-let n = 30
+let t = 1// t+1 needed to reconstruct
+let n = 3
 
 let S = try toPoint(BInt(34))
 print("secret", S)
-let sharing = try gShamirShare(S: S, t: t, n: n)
-let reconstruct = (alphas: Array(sharing.alphas[1...t+1]), shares: Array(sharing.shares[1...t+1]))
+let alphas = setup()
+print(alphas)
+let shares = try gShamirShare(alphas: alphas, S: S, t: t, n: n)
+print(shares)
+let reconstruct = (alphas: Array(alphas[2...t+2]), shares: Array(shares[1...t+1]))
 print("recreated",try gShamirRec(shares: reconstruct.shares, t: t, alphas: reconstruct.alphas))
