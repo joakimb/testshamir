@@ -13,7 +13,7 @@
 		156CF5D92AB86ADD00B243FE /* helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156CF5D82AB86ADD00B243FE /* helpers.swift */; };
 		156CF5DB2AB86F9F00B243FE /* dhpvss.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156CF5DA2AB86F9F00B243FE /* dhpvss.swift */; };
 		156CF5E02AB9950000B243FE /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 156CF5DF2AB9950000B243FE /* CryptoSwift */; };
-		156CF5E22AB9C2BF00B243FE /* nizkdl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156CF5E12AB9C2BF00B243FE /* nizkdl.swift */; };
+		156CF5E22AB9C2BF00B243FE /* nizk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156CF5E12AB9C2BF00B243FE /* nizk.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,7 +34,7 @@
 		156CF5D62AB86AA900B243FE /* sss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sss.swift; sourceTree = "<group>"; };
 		156CF5D82AB86ADD00B243FE /* helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = helpers.swift; sourceTree = "<group>"; };
 		156CF5DA2AB86F9F00B243FE /* dhpvss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dhpvss.swift; sourceTree = "<group>"; };
-		156CF5E12AB9C2BF00B243FE /* nizkdl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nizkdl.swift; sourceTree = "<group>"; };
+		156CF5E12AB9C2BF00B243FE /* nizk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nizk.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,7 +73,7 @@
 				156CF5D62AB86AA900B243FE /* sss.swift */,
 				156CF5DA2AB86F9F00B243FE /* dhpvss.swift */,
 				156CF5D82AB86ADD00B243FE /* helpers.swift */,
-				156CF5E12AB9C2BF00B243FE /* nizkdl.swift */,
+				156CF5E12AB9C2BF00B243FE /* nizk.swift */,
 			);
 			path = testcli;
 			sourceTree = "<group>";
@@ -148,7 +148,7 @@
 				156CF5D72AB86AA900B243FE /* sss.swift in Sources */,
 				156CF5D92AB86ADD00B243FE /* helpers.swift in Sources */,
 				156CF5DB2AB86F9F00B243FE /* dhpvss.swift in Sources */,
-				156CF5E22AB9C2BF00B243FE /* nizkdl.swift in Sources */,
+				156CF5E22AB9C2BF00B243FE /* nizk.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
