@@ -7,8 +7,10 @@
 
 import Foundation
 import BigInt
+import SwiftECC
+import CryptoSwift
 
-func setup() -> (Array<BInt>) {
+func setup( n: Int) -> (alphas: Array<BInt>, vs: Array<BInt>) {
     
     var alphas = Array<BInt>()//(0...n)
     alphas.append(BInt(0))
@@ -17,7 +19,38 @@ func setup() -> (Array<BInt>) {
         alphas.append(alpha)
     }
     
-    //continue here, with doing vi:s, but do on paper at same time
+    var vs = Array<BInt>()
+    for i in 1...n {
+        
+        var v = BInt(1)
+        
+        for j in 1...n {
+            
+            if (i == j){
+                continue
+            }
+            
+            v = alphas[i] - alphas[j]
+            v = v.modInverse(domain.order)
+            
+        }
+        
+        vs.append(v)
+        
+    }
     
-    return alphas
+    return (alphas, vs)
 }
+
+func dKeyGen() throws  -> (privD: BInt, pubD: Point) {
+    
+    let privD = randZp()
+    let pubD = try toPoint(privD)
+    
+    return (privD,pubD)
+}
+
+
+
+
+//func keyGen() //skipping "id" parameter in omega, seems unused
