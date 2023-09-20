@@ -53,4 +53,11 @@ func dKeyGen() throws  -> (privD: BInt, pubD: Point) {
 
 
 
-//func keyGen() //skipping "id" parameter in omega, seems unused
+func keyGen() throws -> (priv: BInt, pub: (E: Point, omega: DLProof)) {//skipping "id" parameter in omega, seems unused
+     
+    let priv = randZp()
+    let E = try toPoint(priv)
+    let omega = try NIZKDLProve(priv)
+    let pub = (E: E, omega: omega)
+    return (priv: priv, pub: pub)
+}
