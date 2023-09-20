@@ -34,8 +34,8 @@ func NIZKDLProve(_ x: BInt) throws -> DLProof{
     let r = randZp()
     let u = try toPoint(r)
     let bytes = toBytes(domain.g) + toBytes(X) + toBytes(u)
-    let c = sha256(bytes) % domain.order
-    let z = r + c * x % domain.order
+    let c = sha256(bytes).mod(domain.order)
+    let z = r + c * x.mod(domain.order)
     
     return DLProof(u: u, c: c, z: z)
 
@@ -44,7 +44,7 @@ func NIZKDLProve(_ x: BInt) throws -> DLProof{
 func NIZKDLVerify(X: Point, pi: DLProof) throws -> Bool {
 
     let bytes = toBytes(domain.g) + toBytes(X) + toBytes(pi.u)
-    let cprime = sha256(bytes) % domain.order
+    let cprime = sha256(bytes).mod(domain.order)
     let fsCheck = (pi.c == cprime)
     
     let lhs = try toPoint(pi.z)
@@ -62,8 +62,8 @@ func NIZKDLEQProve(exp: BInt, a: Point, A: Point, b: Point, B: Point) throws -> 
     let Ra = try domain.multiplyPoint(a, r)
     let Rb = try domain.multiplyPoint(b, r)
     let bytes = toBytes(a) + toBytes(A) + toBytes(b) + toBytes(B) + toBytes(Ra) + toBytes(Rb)
-    let c = sha256(bytes) % domain.order
-    let z = r - c * exp % domain.order
+    let c = sha256(bytes).mod(domain.order)
+    let z = r - c * exp.mod(domain.order)
     
     return DLEQProof(Ra: Ra, Rb: Rb, c: c, z: z)
     
@@ -72,7 +72,7 @@ func NIZKDLEQProve(exp: BInt, a: Point, A: Point, b: Point, B: Point) throws -> 
 func NIZKDLEQVerify(a: Point, A: Point, b: Point, B: Point, pi: DLEQProof) throws -> Bool {
     
     let bytes = toBytes(a) + toBytes(A) + toBytes(b) + toBytes(B) + toBytes(pi.Ra) + toBytes(pi.Rb)
-    let cprime = sha256(bytes) % domain.order
+    let cprime = sha256(bytes).mod(domain.order)
     let fsCheck = (pi.c == cprime)
     
     let alhs = pi.Ra

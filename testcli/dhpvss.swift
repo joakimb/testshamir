@@ -19,8 +19,12 @@ struct PVSSPubParams {
     
 }
 
-
 func setup(t: Int, n: Int) -> PVSSPubParams {
+    
+    guard ((n - t - 2) > 0) else {
+        print("n and t relation bad")
+        exit(1)
+    }
     
     var alphas = Array<BInt>()//(0...n)
     for i in 0...n {
@@ -38,9 +42,7 @@ func setup(t: Int, n: Int) -> PVSSPubParams {
                 continue
             }
             
-            v = alphas[i] - alphas[j] % domain.order
-//            print("i:",i,"j:",j,"v:",v)
-//            print(v, "=",alphas[i], "-", alphas[j])
+            v = alphas[i] - alphas[j].mod(domain.order)
             v = v.modInverse(domain.order)
             
         }
@@ -78,20 +80,21 @@ func verifyKey(E: Point, omega: DLProof) throws -> Bool {
     
 }
 
-private func hashToRandBInts(data: Array<UInt8>, numRands: Int) -> Array<BInt> {
+private func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
     
     //let the seed be the hash of the input
-    //let the i:th coefficient be defined as the seed hashed i times
-    var seed = sha256(data) % domain.order
-    var rands = Array<BInt>()
-    for _ in 0...(numRands-1) {
+    //let the i:th coefficient be defined as the seed hashed i times (0 for i = 0 )
+    var coeffs = Array<BInt>()
+    coeffs.append(BInt(0))
+    var seed = sha256(data).mod(domain.order)
+    for _ in 1...(num) {
         
-        rands.append(seed)
+        coeffs.append(seed)
         seed = sha256(seed.asSignedBytes())
         
     }
             
-    return rands
+    return coeffs
     
 }
 
@@ -102,7 +105,8 @@ private func deriveUV(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: 
     for i in 0...(comKeys.count - 1) {
         data = data + toBytes(comKeys[i]) + toBytes(C[i])
     }
-    let coeffs = hashToRandBInts(data: data, numRands: pp.n - pp.t - 1) // or n-t-2 ? degree or num coeffs?
+    let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2) // or n-t-1 ? degree or num coeffs?
+    print("num coeffs m*",coeffs.count)
     
     //eval poly with hashed coeffs for V and U
     var V = try toPoint(BInt(0))
@@ -128,6 +132,7 @@ private func deriveUV(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: 
 
 func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<Point>, S: Point) throws -> (encShares: Array<Point>, shareProof: DLEQProof){
     
+    print("n:",pp.n,"t:",pp.t)
     let shares: Array<Point> = try gShamirShare(indexes: pp.alphas, S: S, t: pp.t, n: pp.n)
     
     var C = Array<Point>()
@@ -136,6 +141,7 @@ func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<
         c = try domain.addPoints(c, shares[i])
         C.append(c)
     }
+    print("num C",C.count)
 
     let (U,V) = try deriveUV(pp: pp, pubD: pubD, C: C, comKeys: comKeys)
     
