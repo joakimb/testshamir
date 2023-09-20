@@ -9,7 +9,7 @@ import Foundation
 import BigInt
 import SwiftECC
 
-let debug = false
+let debug = true
 
 let domain: Domain = {
     if debug {
