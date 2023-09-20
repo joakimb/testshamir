@@ -40,6 +40,7 @@ func setup( n: Int) -> (alphas: Array<BInt>, vs: Array<BInt>) {
     }
     
     return (alphas, vs)
+    
 }
 
 func dKeyGen() throws  -> (privD: BInt, pubD: Point) {
@@ -48,6 +49,7 @@ func dKeyGen() throws  -> (privD: BInt, pubD: Point) {
     let pubD = try toPoint(privD)
     
     return (privD,pubD)
+    
 }
 
 
@@ -60,4 +62,18 @@ func keyGen() throws -> (priv: BInt, pub: (E: Point, omega: DLProof)) {//skippin
     let omega = try NIZKDLProve(priv)
     let pub = (E: E, omega: omega)
     return (priv: priv, pub: pub)
+    
 }
+
+func verifyKey(E: Point, omega: DLProof) throws -> Bool {
+    
+    return try NIZKDLVerify(X: E, pi: omega)
+    
+}
+
+//func distribute(privD: BInt, pubD: Point, comKeys: Array<Point>, secret: Point) throws -> (encShares: Array<Point>, shareProof: lksdlfjkljsdfljh){
+//    
+//    
+//    
+//}
+
