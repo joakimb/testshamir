@@ -66,14 +66,19 @@ let invalidpvss = try verifyPVSS(pp: pp, pubD: S, C: encShares, comKeys: comPubK
 print("false pvss:",invalidpvss)
 
 //decrypt
-for i in 1...(t+1) {
+var decShares = Array<Point>()
+for i in 0...(n-1) {
     let (dShare, pi) = try decPVSSShare(pubD: pubD, privC: comPrivKeys[i], pubC: comPubKeys[i], eShare: encShares[i])
     let goodShare = try verifyDecPVSSShare(pubD: pubD, pubC: comPubKeys[i], eShare: encShares[i], dShare: dShare, pi: pi)
     if (!goodShare) {
         print("BAD SHARE")
     } else {
+        decShares.append(dShare)
         print("GOOD SHARE")
     }
 }
 
 
+
+let reconstructedSecret = try recPVSS(shares: Array(decShares[1...t+1]) , t: pp.t, alphas: Array(pp.alphas[2...t+2]))
+print("shared:", S, "recon:", reconstructedSecret)

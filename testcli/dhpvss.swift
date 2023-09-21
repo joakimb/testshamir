@@ -174,6 +174,8 @@ func verifyDecPVSSShare(pubD: Point, pubC: Point, eShare: Point, dShare: Point, 
     
 }
 
-//func recPVSS(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point {
-//    
-//}
+func recPVSS(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point {
+    
+    return try gShamirRec(shares: shares, t: t, alphas: alphas)
+    
+}
