@@ -155,3 +155,25 @@ func verifyPVSS(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: Array<
     return try NIZKDLEQVerify(a: domain.g, A: pubD, b: U, B: V, pi: pi)
     
 }
+
+func decPVSSShare(pubD: Point, privC: BInt, pubC: Point, eShare: Point ) throws -> (share: Point, pi: DLEQProof) {
+    
+    let sharedKey = try domain.multiplyPoint(pubD,privC)
+    let dShare = try domain.subtractPoints(eShare, sharedKey)
+    let diff = try domain.subtractPoints(eShare, dShare)
+    let pi = try NIZKDLEQProve(exp: privC, a: domain.g, A: pubC, b: pubD, B: diff)
+    
+    return(dShare, pi)
+    
+}
+
+func verifyDecPVSSShare(pubD: Point, pubC: Point, eShare: Point, dShare: Point, pi: DLEQProof) throws -> Bool {
+    
+    let diff = try domain.subtractPoints(eShare, dShare)
+    return try NIZKDLEQVerify(a: domain.g, A: pubC, b: pubD, B: diff, pi: pi)
+    
+}
+
+//func recPVSS(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point {
+//    
+//}

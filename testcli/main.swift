@@ -51,14 +51,29 @@ print("false dleq nizk:",invalideq)
 //test DHPVSS
 print("PVSS+++++++++++++++++++++++++++++++++")
 let (privD,pubD) = try dKeyGen()
-var comKeys = Array<Point>()
+var comPubKeys = Array<Point>()
+var comPrivKeys = Array<BInt>()
 for _ in 1...n {
-    let (_, pubKey) = try keyGen()
-    comKeys.append(pubKey.E)
+    let (privKey, pubKey) = try keyGen()
+    comPubKeys.append(pubKey.E)
+    comPrivKeys.append(privKey)
 }
-let (encShares, piPvss) = try distributePVSS(pp: pp, privD: privD, pubD: pubD, comKeys: comKeys, S: S)
+let (encShares, piPvss) = try distributePVSS(pp: pp, privD: privD, pubD: pubD, comKeys: comPubKeys, S: S)
 
-let validpvss = try verifyPVSS(pp: pp, pubD: pubD, C: encShares, comKeys: comKeys, pi: piPvss)
+let validpvss = try verifyPVSS(pp: pp, pubD: pubD, C: encShares, comKeys: comPubKeys, pi: piPvss)
 print("true pvss:",validpvss)
-let invalidpvss = try verifyPVSS(pp: pp, pubD: S, C: encShares, comKeys: comKeys, pi: piPvss)
+let invalidpvss = try verifyPVSS(pp: pp, pubD: S, C: encShares, comKeys: comPubKeys, pi: piPvss)
 print("false pvss:",invalidpvss)
+
+//decrypt
+for i in 1...(t+1) {
+    let (dShare, pi) = try decPVSSShare(pubD: pubD, privC: comPrivKeys[i], pubC: comPubKeys[i], eShare: encShares[i])
+    let goodShare = try verifyDecPVSSShare(pubD: pubD, pubC: comPubKeys[i], eShare: encShares[i], dShare: dShare, pi: pi)
+    if (!goodShare) {
+        print("BAD SHARE")
+    } else {
+        print("GOOD SHARE")
+    }
+}
+
+
