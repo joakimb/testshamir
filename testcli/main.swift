@@ -17,7 +17,6 @@ let S = try toPoint(BInt(34))
 print("secret", S)
 let pp = setup(t: t,n: n)
 let alphas = pp.alphas
-print(alphas)
 let shares = try gShamirShare(indexes: alphas, S: S, t: t, n: n)
 let ssreconstruct = (alphas: Array(alphas[2...t+2]), shares: Array(shares[1...t+1]))
 print("recreated",try gShamirRec(shares: ssreconstruct.shares, t: t, alphas: ssreconstruct.alphas))

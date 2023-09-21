@@ -51,7 +51,7 @@ func gShamirRec(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Poi
     for i in 0...(alphas.count-1) {
         let lambda = lagX(alphas: alphas, i: i).mod(domain.order)
         let term = try domain.multiplyPoint(shares[i], lambda)
-        sum = try domain.addPoints(sum, term)// <#T##p2: Point##Point#>)   * shares[i].mod(domain.order)
+        sum = try domain.addPoints(sum, term)
     }
     return sum
 }

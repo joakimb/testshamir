@@ -42,8 +42,8 @@ func setup(t: Int, n: Int) -> PVSSPubParams {
                 continue
             }
             
-            v = alphas[i] - alphas[j].mod(domain.order)
-            v = v.modInverse(domain.order)
+            let term = (alphas[i] - alphas[j]).mod(domain.order)
+            v = v * term.modInverse(domain.order)
             
         }
         
@@ -106,7 +106,6 @@ private func deriveUV(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: 
         data = data + toBytes(comKeys[i]) + toBytes(C[i])
     }
     let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2) // or n-t-1 ? degree or num coeffs?
-    print("num coeffs m*",coeffs.count)
     
     //eval poly with hashed coeffs for V and U
     var V = try toPoint(BInt(0))
@@ -132,7 +131,6 @@ private func deriveUV(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: 
 
 func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<Point>, S: Point) throws -> (encShares: Array<Point>, shareProof: DLEQProof){
     
-    print("n:",pp.n,"t:",pp.t)
     let shares: Array<Point> = try gShamirShare(indexes: pp.alphas, S: S, t: pp.t, n: pp.n)
     
     var C = Array<Point>()
@@ -141,13 +139,12 @@ func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<
         c = try domain.addPoints(c, shares[i])
         C.append(c)
     }
-    print("num C",C.count)
 
     let (U,V) = try deriveUV(pp: pp, pubD: pubD, C: C, comKeys: comKeys)
     
     //prove correctness
     let pi = try NIZKDLEQProve(exp: privD, a: domain.g, A: pubD, b: U, B: V)
-    
+
     return (encShares: C, shareProof: pi)
     
 }
