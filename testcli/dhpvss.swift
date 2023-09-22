@@ -123,8 +123,10 @@ private func scrapeSum(pp: PVSSPubParams, coeffs: Array<BInt>, codeWord: Array<P
 
 func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<Point>, S: Point) throws -> (encShares: Array<Point>, shareProof: DLEQProof){
     
-    let shares: Array<Point> = try gShamirShare(indexes: pp.alphas, S: S, t: pp.t, n: pp.n)
+    //secret share
+    let shares = try gShamirShare(indexes: pp.alphas, S: S, t: pp.t, n: pp.n)
     
+    //encrypt shares
     var C = Array<Point>()
     for i in 0...(pp.n - 1){
         var c = try domain.multiplyPoint(comKeys[i], privD)
@@ -190,6 +192,46 @@ func recPVSS(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point 
     
 }
 
-func resharePVSS() {
-    
-}
+//i:th party cur epoch reshares i:th encryted shares to the next epoch committee, using ints own distkeys, pub params for next epoch and public Dist key pubD from previous epoch
+//func resharePVSS(nextPP: PVSSPubParams, comPrivKey: BInt, nextComKeys: Array<Point>, curEncShares: Array<Point>, partyIndex: Int, curEncShare privD: BInt, pubD: Point, prevPubD: Point) throws -> Array<Point> {
+//
+//    // decrypt encrypted share
+//    let sharedKey = try domain.multiplyPoint(prevPubD,comPrivKey)
+//    let dShare = try domain.subtractPoints(curEncShares[partyIndex], sharedKey)
+//    let decCurShare = try domain.subtractPoints(curEncShares[partyIndex], dShare)
+//
+//    //create shares of it fot next epoch committe
+//    let reShares = try gShamirShare(indexes: nextPP.alphas, S: decCurShare, t: nextPP.t, n: nextPP.n)
+//
+//    //encrypt the shares for next epoch committee keys
+//    var nextComEncShares = Array<Point>()
+//    for i in 0...(nextPP.n - 1){
+//        var c = try domain.multiplyPoint(nextComKeys[i], privD)
+//        c = try domain.addPoints(c, reShares[i])
+//        nextComEncShares.append(c)
+//    }
+//
+//    //hash to poly coeffs
+//    var data = toBytes(prevPubD)
+//    for i in 0...(curEncShares.count - 1) {
+//        data = data + toBytes(curEncShares[i])
+//    }
+//    let coeffs = hashToPolyCoeffs(data: data, num: nextPP.n - nextPP.t - 1) //why minus 1 not 2? //also, verify that it should be nextPP and not pp
+//
+//    //derive U, V, W
+//    var encShareDiffs = Array<Point>()
+//    for i in 0...(curEncShares.count - 1) {
+//        let encShareDiff = try domain.subtractPoints(nextComEncShares[i], curEncShares[partyIndex])
+//        encShareDiffs.append(encShareDiff)
+//    }
+//    let nextU = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: encShareDiffs)
+//    let nextV = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: nextComKeys)
+//    var bunchOfSamePrevPubD = Array<Point>()
+//    for _ in 1...nextPP.n {
+//        bunchOfSamePrevPubD.append(prevPubD)
+//    }
+//    let nextW = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: bunchOfSamePrevPubD)
+//
+//    //prove correctness
+//
+//}

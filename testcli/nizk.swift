@@ -14,7 +14,6 @@ import SwiftECC
 struct DLProof {
 
     var u: Point
-    var c: BInt
     var z: BInt
     
 }
@@ -23,7 +22,6 @@ struct DLEQProof {
 
     var Ra: Point
     var Rb: Point
-    var c: BInt
     var z: BInt
     
 }
@@ -37,22 +35,20 @@ func NIZKDLProve(_ x: BInt) throws -> DLProof{
     let c = sha256(bytes).mod(domain.order)
     let z = r + c * x.mod(domain.order)
     
-    return DLProof(u: u, c: c, z: z)
+    return DLProof(u: u, z: z)
 
 }
 
 func NIZKDLVerify(X: Point, pi: DLProof) throws -> Bool {
 
     let bytes = toBytes(domain.g) + toBytes(X) + toBytes(pi.u)
-    let cprime = sha256(bytes).mod(domain.order)
-    let fsCheck = (pi.c == cprime)
+    let c = sha256(bytes).mod(domain.order)
     
     let lhs = try toPoint(pi.z)
-    var rhs = try domain.multiplyPoint(X, pi.c)
+    var rhs = try domain.multiplyPoint(X, c)
     rhs = try domain.addPoints(pi.u, rhs)
-    let schnorrCheck = (lhs == rhs)
     
-    return (fsCheck && schnorrCheck)
+    return (lhs == rhs)
     
 }
 
@@ -65,27 +61,24 @@ func NIZKDLEQProve(exp: BInt, a: Point, A: Point, b: Point, B: Point) throws -> 
     let c = sha256(bytes).mod(domain.order)
     let z = r - c * exp.mod(domain.order)
     
-    return DLEQProof(Ra: Ra, Rb: Rb, c: c, z: z)
+    return DLEQProof(Ra: Ra, Rb: Rb, z: z)
     
 }
 
 func NIZKDLEQVerify(a: Point, A: Point, b: Point, B: Point, pi: DLEQProof) throws -> Bool {
     
     let bytes = toBytes(a) + toBytes(A) + toBytes(b) + toBytes(B) + toBytes(pi.Ra) + toBytes(pi.Rb)
-    let cprime = sha256(bytes).mod(domain.order)
-    let fsCheck = (pi.c == cprime)
+    let c = sha256(bytes).mod(domain.order)
     
     let alhs = pi.Ra
     let arhs1 = try domain.multiplyPoint(a, pi.z)
-    let arhs2 = try domain.multiplyPoint(A, pi.c)
+    let arhs2 = try domain.multiplyPoint(A, c)
     let arhs = try domain.addPoints(arhs1, arhs2)
     let blhs = pi.Rb
     let brhs1 = try domain.multiplyPoint(b, pi.z)
-    let brhs2 = try domain.multiplyPoint(B, pi.c)
+    let brhs2 = try domain.multiplyPoint(B, c)
     let brhs = try domain.addPoints(brhs1, brhs2)
-    let chaumPedersenCheckA = (alhs == arhs)
-    let chaumPedersenCheckB = (blhs == brhs)
     
-    return (fsCheck && chaumPedersenCheckA && chaumPedersenCheckB)
+    return ((alhs == arhs) && (blhs == brhs))
 
 }
