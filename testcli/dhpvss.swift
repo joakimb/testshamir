@@ -80,7 +80,7 @@ func verifyKey(E: Point, omega: DLProof) throws -> Bool {
     
 }
 
-func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
+private func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
     
     //let the seed be the hash of the input
     //let the i:th coefficient be defined as the seed hashed i times (0 for i = 0 )
@@ -98,27 +98,26 @@ func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
     
 }
 
-private func deriveUV(pp: PVSSPubParams, coeffs: Array<BInt>, pubD: Point, C: Array<Point>, comKeys: Array<Point>) throws -> (U: Point, V: Point) {
+private func scrapeSum(pp: PVSSPubParams, coeffs: Array<BInt>, codeWord: Array<Point>) throws -> Point {
     
-    //eval poly with hashed coeffs for V and U
-    var V = try toPoint(BInt(0))
-    var U = try toPoint(BInt(0))
+    //eval poly with hashed coeffs
+    var sum = try toPoint(BInt(0))
     for x in 1...(pp.n) {
+        
         //derive mstar
         let alpha = pp.alphas[x]
         var mstar = BInt(0)
         for i in 0...(coeffs.count-1) {
             mstar += (coeffs[i] * alpha ** i).mod(domain.order)
         }
-        //add v_i * m^star(alpha_i) * C_i to V sum
-        let Vterm = try domain.multiplyPoint(C[x - 1], pp.vs[x - 1] * mstar)
-        V = try domain.addPoints(V, Vterm)
-        //add v_i * m^star(alpha_i) * E_i to U sum
-        let Uterm = try domain.multiplyPoint(comKeys[x - 1], pp.vs[x - 1] * mstar)
-        U = try domain.addPoints(U, Uterm)
+        //add v_i * m^star(alpha_i) * codeWord[i] to sum
+        let term = try domain.multiplyPoint(codeWord[x - 1], pp.vs[x - 1] * mstar)
+        sum = try domain.addPoints(sum, term)
+        
     }
     
-    return (U,V)
+    return sum
+    
 }
 
 
@@ -140,7 +139,9 @@ func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<
     }
     let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
 
-    let (U,V) = try deriveUV(pp: pp, coeffs: coeffs, pubD: pubD, C: C, comKeys: comKeys)
+    //this evaluates the same polynomial twice, can be made more efficient
+    let U = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: C)
+    let V = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: comKeys)
     
     //prove correctness
     let pi = try NIZKDLEQProve(exp: privD, a: domain.g, A: pubD, b: U, B: V)
@@ -158,7 +159,9 @@ func verifyPVSS(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: Array<
     }
     let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
     
-    let (U,V) = try deriveUV(pp: pp, coeffs: coeffs, pubD: pubD, C: C, comKeys: comKeys)
+    let U = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: C)
+    let V = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: comKeys)
+    
     return try NIZKDLEQVerify(a: domain.g, A: pubD, b: U, B: V, pi: pi)
     
 }
