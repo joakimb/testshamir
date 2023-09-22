@@ -227,10 +227,8 @@ func recPVSS(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point 
 //    let nextU = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: encShareDiffs)
 //    let nextV = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: nextComKeys)
 //    var bunchOfSamePrevPubD = Array<Point>()
-//    for _ in 1...nextPP.n {
-//        bunchOfSamePrevPubD.append(prevPubD)
-//    }
-//    let nextW = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: bunchOfSamePrevPubD)
+//    lagPubD
+//    let nextW = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: lagPubD)
 //
 //    //prove correctness
 //
