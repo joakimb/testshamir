@@ -80,7 +80,7 @@ func verifyKey(E: Point, omega: DLProof) throws -> Bool {
     
 }
 
-private func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
+func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
     
     //let the seed be the hash of the input
     //let the i:th coefficient be defined as the seed hashed i times (0 for i = 0 )
@@ -98,14 +98,7 @@ private func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
     
 }
 
-private func deriveUV(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: Array<Point>) throws -> (U: Point, V: Point) {
-    
-    //hash to poly coeffs
-    var data = toBytes(pubD)
-    for i in 0...(comKeys.count - 1) {
-        data = data + toBytes(comKeys[i]) + toBytes(C[i])
-    }
-    let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2) // or n-t-1 ? degree or num coeffs?
+private func deriveUV(pp: PVSSPubParams, coeffs: Array<BInt>, pubD: Point, C: Array<Point>, comKeys: Array<Point>) throws -> (U: Point, V: Point) {
     
     //eval poly with hashed coeffs for V and U
     var V = try toPoint(BInt(0))
@@ -139,8 +132,15 @@ func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<
         c = try domain.addPoints(c, shares[i])
         C.append(c)
     }
+    
+    //hash to poly coeffs
+    var data = toBytes(pubD)
+    for i in 0...(comKeys.count - 1) {
+        data = data + toBytes(comKeys[i]) + toBytes(C[i])
+    }
+    let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
 
-    let (U,V) = try deriveUV(pp: pp, pubD: pubD, C: C, comKeys: comKeys)
+    let (U,V) = try deriveUV(pp: pp, coeffs: coeffs, pubD: pubD, C: C, comKeys: comKeys)
     
     //prove correctness
     let pi = try NIZKDLEQProve(exp: privD, a: domain.g, A: pubD, b: U, B: V)
@@ -151,7 +151,14 @@ func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<
 
 func verifyPVSS(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: Array<Point>, pi: DLEQProof) throws -> Bool {
     
-    let (U,V) = try deriveUV(pp: pp, pubD: pubD, C: C, comKeys: comKeys)
+    //hash to poly coeffs
+    var data = toBytes(pubD)
+    for i in 0...(comKeys.count - 1) {
+        data = data + toBytes(comKeys[i]) + toBytes(C[i])
+    }
+    let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
+    
+    let (U,V) = try deriveUV(pp: pp, coeffs: coeffs, pubD: pubD, C: C, comKeys: comKeys)
     return try NIZKDLEQVerify(a: domain.g, A: pubD, b: U, B: V, pi: pi)
     
 }
@@ -177,5 +184,9 @@ func verifyDecPVSSShare(pubD: Point, pubC: Point, eShare: Point, dShare: Point, 
 func recPVSS(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point {
     
     return try gShamirRec(shares: shares, t: t, alphas: alphas)
+    
+}
+
+func resharePVSS() {
     
 }
