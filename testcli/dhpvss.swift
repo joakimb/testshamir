@@ -192,6 +192,13 @@ func recPVSS(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point 
     
 }
 
+//helper function to calculate pk_{D,L_{r-1}}, i.e a lagrange interpolation of the distibution keys of the t+1 parties in L for the prvious round
+//which were used to reconstruct the share that is to be reshared from the current round to the next round
+//this can be done by a call to shamir lagrange interpol, but with the sharares replace with the distribution keys
+func lagPubD () {
+    
+}
+
 //i:th party cur epoch reshares i:th encryted shares to the next epoch committee, using ints own distkeys, pub params for next epoch and public Dist key pubD from previous epoch
 //func resharePVSS(nextPP: PVSSPubParams, comPrivKey: BInt, nextComKeys: Array<Point>, curEncShares: Array<Point>, partyIndex: Int, curEncShare privD: BInt, pubD: Point, prevPubD: Point) throws -> Array<Point> {
 //
