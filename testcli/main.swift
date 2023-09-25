@@ -148,10 +148,10 @@ for i in 0...(pp.n-1) {
     
 }
 
-//TOMORROW: its the pedersencheck that does not work. invesigate, maybe do by hand, and checkif U V and W are the same at both ends, and if the handleing of pk_D,L is correct
+//TOMORROW: its the pedersencheck that does not work. invesigate, maybe do by hand, and checkif U V and W are the same at both ends, and if the handleing of pk_D,L is correct. Also consider refactoring and renaming to make the code easier to reasno about to find the bug. AND CHECK IF THE BOOTSTRAPPING ASSUMPTION IF pk_D,L is bonkers (check if DL holds...)
 
-print(parties)
-print(newParties)
+//print(parties)
+//print(newParties)
 
 
 

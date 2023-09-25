@@ -245,6 +245,8 @@ func resharePVSS(
         bunchOfSamePrevPubD.append(prevPubD)
     }
     let nextW = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: bunchOfSamePrevPubD)
+    print("sharing UVW", nextU, nextV, nextW)
+    print("sharing Y2:", partyPubD)
 
     //prove correctness (f)
     let pi = try NIZKReshareProve(w1: comPrivKey, w2: partyPrivD, ga: domain.g, gb: nextV, gc: nextW, Y1: comPubKey, Y2: partyPubD, Y3: nextU)
@@ -273,6 +275,8 @@ func reconstructResharesPVSS (partyIndex: Int, curEncShares: Array<Point>, reSha
     //verify proof (a).ii
     let validProof = try NIZKReshareVerify(ga: domain.g, gb: nextV, gc: nextW, Y1: curComKey, Y2: prevPubD, Y3: nextU, pi: pi)
     print("reshareproof",validProof)
+    print("recon UVW", nextU, nextV, nextW)
+    print("recon Y2:", prevPubD)
     
     //TODO (b)
 }
