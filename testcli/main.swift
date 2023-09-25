@@ -148,7 +148,10 @@ for i in 0...(pp.n-1) {
     
 }
 
-//TOMORROW: its the pedersencheck that does not work. invesigate, maybe do by hand, and checkif U V and W are the same at both ends, and if the handleing of pk_D,L is correct. Also consider refactoring and renaming to make the code easier to reasno about to find the bug. AND CHECK IF THE BOOTSTRAPPING ASSUMPTION IF pk_D,L is bonkers (check if DL holds...). AND REMEMBER: it might be that the resharing i wrong, and not the proof. Thest this by doing the reconstruction and checking if you get the correct value. Also, mybe break up inte sub-functions
+//TOMORROW: its the pedersencheck that does not work. invesigate, maybe do by hand, and checkif U V and W are the same at both ends, and if the handleing of pk_D,L is correct.
+//Also consider refactoring and renaming to make the code easier to reasno about to find the bug. AND CHECK IF THE BOOTSTRAPPING ASSUMPTION IF pk_D,L is bonkers (check if DL holds...).
+//AND REMEMBER: it might be that the resharing i wrong, and not the proof. Thest this by doing the reconstruction and checking if you get the correct value. Also, mybe break up inte sub-functions.
+// If nothing else works, it is possible to start a "by-hand" calculation from a set of encrypted shares (constructable from code) since that is the last point we know to be correct.
 
 //print(parties)
 //print(newParties)
