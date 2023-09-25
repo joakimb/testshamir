@@ -99,8 +99,35 @@ for i in 0...(n-1) {
         print("GOOD SHARE")
     }
 }
-
-
-
+//reconstruct secret
 let reconstructedSecret = try recPVSS(shares: Array(decShares[1...t+1]) , t: pp.t, alphas: Array(pp.alphas[2...t+2]))
 print("shared:", S, "recon:", reconstructedSecret)
+
+//reshare with pubD from original distributor
+
+// how to bootstrap th pk_D
+
+
+
+//var comPubKeys = Array<Point>()
+//var comPrivKeys = Array<BInt>()
+//for _ in 1...n {
+//    let (privKey, pubKey) = try keyGen()
+//    comPubKeys.append(pubKey.E)
+//    comPrivKeys.append(privKey)
+//}
+
+
+//TODO: make a second reshare with pubD derived from prev com pubD keys
+////construct pk_{D,L_{r-1}}
+//var reconKeys = Array<Point>()
+//for i in curReconstructIndexes {
+//
+//    guard let index = i.asInt() else {
+//        print("alpha too long")
+//        exit(1)
+//    }
+//    reconKeys.append(pubDs[index])
+//
+//}
+//let lagPubD = try lagPubD(keys: reconKeys, t: t, alphas:curReconstructIndexes)

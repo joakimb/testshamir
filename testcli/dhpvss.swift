@@ -195,48 +195,60 @@ func recPVSS(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point 
 //helper function to calculate pk_{D,L_{r-1}}, i.e a lagrange interpolation of the distibution keys of the t+1 parties in L for the prvious round
 //which were used to reconstruct the share that is to be reshared from the current round to the next round
 //this can be done by a call to shamir lagrange interpol, but with the sharares replace with the distribution keys
-func lagPubD () {
-    
+func lagPubD (keys: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point {
+    return try gShamirRec(shares: keys, t: t, alphas: alphas)
 }
 
 //i:th party cur epoch reshares i:th encryted shares to the next epoch committee, using ints own distkeys, pub params for next epoch and public Dist key pubD from previous epoch
-//func resharePVSS(nextPP: PVSSPubParams, comPrivKey: BInt, nextComKeys: Array<Point>, curEncShares: Array<Point>, partyIndex: Int, curEncShare privD: BInt, pubD: Point, prevPubD: Point) throws -> Array<Point> {
-//
-//    // decrypt encrypted share
-//    let sharedKey = try domain.multiplyPoint(prevPubD,comPrivKey)
-//    let dShare = try domain.subtractPoints(curEncShares[partyIndex], sharedKey)
-//    let decCurShare = try domain.subtractPoints(curEncShares[partyIndex], dShare)
-//
-//    //create shares of it fot next epoch committe
-//    let reShares = try gShamirShare(indexes: nextPP.alphas, S: decCurShare, t: nextPP.t, n: nextPP.n)
-//
-//    //encrypt the shares for next epoch committee keys
-//    var nextComEncShares = Array<Point>()
-//    for i in 0...(nextPP.n - 1){
-//        var c = try domain.multiplyPoint(nextComKeys[i], privD)
-//        c = try domain.addPoints(c, reShares[i])
-//        nextComEncShares.append(c)
-//    }
-//
-//    //hash to poly coeffs
-//    var data = toBytes(prevPubD)
-//    for i in 0...(curEncShares.count - 1) {
-//        data = data + toBytes(curEncShares[i])
-//    }
-//    let coeffs = hashToPolyCoeffs(data: data, num: nextPP.n - nextPP.t - 1) //why minus 1 not 2? //also, verify that it should be nextPP and not pp
-//
-//    //derive U, V, W
-//    var encShareDiffs = Array<Point>()
-//    for i in 0...(curEncShares.count - 1) {
-//        let encShareDiff = try domain.subtractPoints(nextComEncShares[i], curEncShares[partyIndex])
-//        encShareDiffs.append(encShareDiff)
-//    }
-//    let nextU = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: encShareDiffs)
-//    let nextV = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: nextComKeys)
-//    var bunchOfSamePrevPubD = Array<Point>()
-//    lagPubD
-//    let nextW = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: lagPubD)
-//
-//    //prove correctness
-//
-//}
+func resharePVSS(
+    partyIndex: Int, comPrivKey: BInt, comPubKey: Point, partyPrivD: BInt, partyPubD: Point, //curReconstructIndexes: Array<BInt>, //resharer
+    curEncShares: Array<Point>, prevPubD: Point, //pubDs: Array<Point>, //comitttee data
+    nextComKeys: Array<Point>, nextPP: PVSSPubParams //next comittee data
+) throws -> (Array<Point>, ReshareProof) {
+
+    //TODO: all encrypted shares shares should be included here, not just valid ones?
+    //TODO: use pk_DLr-1
+    
+   
+    // decrypt encrypted share (a)
+    let sharedKey = try domain.multiplyPoint(prevPubD,comPrivKey)
+    let dShare = try domain.subtractPoints(curEncShares[partyIndex], sharedKey)
+
+    //create shares of it fot next epoch committe (b)
+    let reShares = try gShamirShare(indexes: nextPP.alphas, S: dShare, t: nextPP.t, n: nextPP.n)
+
+    //encrypt the shares for next epoch committee keys (c)
+    var nextComEncShares = Array<Point>()
+    for i in 0...(nextPP.n - 1){
+        var c = try domain.multiplyPoint(nextComKeys[i], partyPrivD)
+        c = try domain.addPoints(c, reShares[i])
+        nextComEncShares.append(c)
+    }
+
+    //hash to poly coeffs (d)
+    var data = toBytes(prevPubD)
+    for i in 0...(curEncShares.count - 1) {
+        data = data + toBytes(curEncShares[i])
+    }
+    let coeffs = hashToPolyCoeffs(data: data, num: nextPP.n - nextPP.t - 1) //why minus 1 not 2? //also, verify that it should be nextPP and not pp
+
+    //derive U, V, W (e)
+    var encShareDiffs = Array<Point>()
+    for i in 0...(curEncShares.count - 1) {
+        let encShareDiff = try domain.subtractPoints(nextComEncShares[i], curEncShares[partyIndex])
+        encShareDiffs.append(encShareDiff)
+    }
+    let nextU = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: encShareDiffs)
+    let nextV = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: nextComKeys)
+    var bunchOfSamePrevPubD = Array<Point>()
+    for _ in 1...nextPP.n {
+        bunchOfSamePrevPubD.append(prevPubD)
+    }
+    let nextW = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: bunchOfSamePrevPubD)
+
+    //prove correctness (f)
+    let pi = try NIZKReshareProve(w1: comPrivKey, w2: partyPrivD, ga: domain.g, gb: nextV, gc: nextW, Y1: comPubKey, Y2: partyPubD, Y3: nextU)
+    
+    return (nextComEncShares, pi)
+
+}

@@ -41,7 +41,7 @@ func lagX(alphas: Array<BInt>, i: Int) -> BInt {
     return prod
 }
 
-func gShamirRec(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point{
+func gShamirRec(shares: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point {
     
     if (alphas.count != t+1 || alphas.count != t+1) {
         throw NSError()
