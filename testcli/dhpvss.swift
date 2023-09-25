@@ -252,3 +252,27 @@ func resharePVSS(
     return (nextComEncShares, pi)
 
 }
+
+func reconstructResharesPVSS (partyIndex: Int, curEncShares: Array<Point>, reShares: Array<Point>, nextComKeys: Array<Point>, nextPP: PVSSPubParams, prevPubD: Point, curComKey: Point, pi: ReshareProof) throws {
+    
+    //compute U from public data and reshares (a).i
+    //derive U, V, W
+    var encShareDiffs = Array<Point>()
+    for i in 0...(curEncShares.count - 1) {
+        let encShareDiff = try domain.subtractPoints(reShares[i], curEncShares[partyIndex])
+        encShareDiffs.append(encShareDiff)
+    }
+    let nextU = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: encShareDiffs)
+    let nextV = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: nextComKeys)
+    var bunchOfSamePrevPubD = Array<Point>()
+    for _ in 1...nextPP.n {
+        bunchOfSamePrevPubD.append(prevPubD)
+    }
+    let nextW = try scrapeSum(pp: nextPP, coeffs: nextPP.alphas, codeWord: bunchOfSamePrevPubD)
+    
+    //verify proof (a).ii
+    let validProof = try NIZKReshareVerify(ga: domain.g, gb: nextV, gc: nextW, Y1: curComKey, Y2: prevPubD, Y3: nextU, pi: pi)
+    print("reshareproof",validProof)
+    
+    //TODO (b)
+}

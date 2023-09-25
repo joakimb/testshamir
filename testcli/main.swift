@@ -72,26 +72,39 @@ print("false3 reshare nizk:",invalidreshare3)
 
 //test DHPVSS
 print("PVSS+++++++++++++++++++++++++++++++++")
-let (privD,pubD) = try dKeyGen()
-var comPubKeys = Array<Point>()
-var comPrivKeys = Array<BInt>()
-for _ in 1...n {
-    let (privKey, pubKey) = try keyGen()
-    comPubKeys.append(pubKey.E)
-    comPrivKeys.append(privKey)
+struct Party {
+    var comPrivKey: BInt
+    var comPubKey: Point
+    var distPrivKey: BInt
+    var distPubKey: Point
+    var reshares: Array<Point>?
+    var reshareProof: ReshareProof?
 }
-let (encShares, piPvss) = try distributePVSS(pp: pp, privD: privD, pubD: pubD, comKeys: comPubKeys, S: S)
 
-let validpvss = try verifyPVSS(pp: pp, pubD: pubD, C: encShares, comKeys: comPubKeys, pi: piPvss)
+// setup key for parties
+let (firstPrivD,firstPubD) = try dKeyGen()
+//var comPubKeys = Array<Point>()
+//var comPrivKeys = Array<BInt>()
+var parties = Array<Party>()
+
+for _ in 1...pp.n {
+    let (privKey, pubKey) = try keyGen()
+    let (privD,pubD) = try dKeyGen()
+    parties.append(Party(comPrivKey: privKey, comPubKey: pubKey.E, distPrivKey: privD, distPubKey: pubD))
+}
+
+let (encShares, piPvss) = try distributePVSS(pp: pp, privD: firstPrivD, pubD: firstPubD, comKeys: parties.map{$0.comPubKey}, S: S)
+
+let validpvss = try verifyPVSS(pp: pp, pubD: firstPubD, C: encShares, comKeys: parties.map{$0.comPubKey}, pi: piPvss)
 print("true pvss:",validpvss)
-let invalidpvss = try verifyPVSS(pp: pp, pubD: S, C: encShares, comKeys: comPubKeys, pi: piPvss)
+let invalidpvss = try verifyPVSS(pp: pp, pubD: S, C: encShares, comKeys: parties.map{$0.comPubKey}, pi: piPvss)
 print("false pvss:",invalidpvss)
 
 //decrypt
 var decShares = Array<Point>()
 for i in 0...(n-1) {
-    let (dShare, pi) = try decPVSSShare(pubD: pubD, privC: comPrivKeys[i], pubC: comPubKeys[i], eShare: encShares[i])
-    let goodShare = try verifyDecPVSSShare(pubD: pubD, pubC: comPubKeys[i], eShare: encShares[i], dShare: dShare, pi: pi)
+    let (dShare, pi) = try decPVSSShare(pubD: firstPubD, privC: parties.map{$0.comPrivKey}[i], pubC: parties.map{$0.comPubKey}[i], eShare: encShares[i])
+    let goodShare = try verifyDecPVSSShare(pubD: firstPubD, pubC: parties.map{$0.comPubKey}[i], eShare: encShares[i], dShare: dShare, pi: pi)
     if (!goodShare) {
         print("BAD SHARE")
     } else {
@@ -100,12 +113,45 @@ for i in 0...(n-1) {
     }
 }
 //reconstruct secret
-let reconstructedSecret = try recPVSS(shares: Array(decShares[1...t+1]) , t: pp.t, alphas: Array(pp.alphas[2...t+2]))
+let reconshares = Array(decShares[1...t+1])
+let reconAlphas = Array(pp.alphas[2...t+2])
+let reconstructedSecret = try recPVSS(shares:  reconshares, t: pp.t, alphas: reconAlphas)
 print("shared:", S, "recon:", reconstructedSecret)
 
-//reshare with pubD from original distributor
+//new committee
+let newPP = setup(t: pp.t, n: pp.n)
+var newParties = Array<Party>()
 
-// how to bootstrap th pk_D
+for _ in 1...newPP.n {
+    let (privKey, pubKey) = try keyGen()
+    let (privD,pubD) = try dKeyGen()
+    newParties.append(Party(comPrivKey: privKey, comPubKey: pubKey.E, distPrivKey: privD, distPubKey: pubD))
+}
+
+//reshare with pubD from original distributor
+for i in 0...(pp.n-1) {
+    
+    // how to bootstrap th pk_D, just use pk_d of first sharing like this?
+    let (reshares, pi) = try resharePVSS(partyIndex: i, comPrivKey: parties[i].comPrivKey, comPubKey: parties[i].comPubKey, partyPrivD: parties[i].distPrivKey, partyPubD: parties[i].distPubKey, curEncShares: encShares, prevPubD: firstPubD, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP)
+    
+    parties[i].reshares = reshares
+    parties[i].reshareProof = pi
+    
+}
+
+
+//reconstruct shares from resharing
+let newEncShares = Array<Point>()
+for i in 0...(pp.n-1) {
+    
+    try reconstructResharesPVSS(partyIndex: i, curEncShares: encShares, reShares: parties[i].reshares!, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP, prevPubD: newParties[i].distPubKey, curComKey: parties[i].comPubKey, pi: parties[i].reshareProof!)
+    
+}
+
+print(parties)
+print(newParties)
+
+
 
 
 
