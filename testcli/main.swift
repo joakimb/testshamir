@@ -148,6 +148,8 @@ for i in 0...(pp.n-1) {
     
 }
 
+//TOMORROW: its the pedersencheck that does not work. invesigate, maybe do by hand, and checkif U V and W are the same at both ends, and if the handleing of pk_D,L is correct
+
 print(parties)
 print(newParties)
 
