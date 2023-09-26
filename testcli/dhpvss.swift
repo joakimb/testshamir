@@ -42,9 +42,8 @@ func setup(t: Int, n: Int) -> PVSSPubParams {
                 continue
             }
             
-            let term = (alphas[i] - alphas[j]).mod(domain.order)
+            let term = (alphas[i] - alphas[j]).mod(domain.order).modInverse(domain.order)
             v = (v * term).mod(domain.order)
-            v = v.modInverse(domain.order)
             
         }
         
@@ -88,12 +87,16 @@ private func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
     var coeffs = Array<BInt>()
     coeffs.append(BInt(0))
     var seed = sha256(data).mod(domain.order)
+//    print("num",num)
     for _ in 1...(num) {
         
         coeffs.append(seed)
+//        print("loop coeffs",coeffs)
         seed = sha256(seed.asSignedBytes())
         
     }
+    
+//    print("coeffs",coeffs)
             
     return coeffs
     
@@ -130,7 +133,7 @@ private func scrapeSum(pp: PVSSPubParams, coeffs: Array<BInt>, codeWord: Array<P
         let alpha = pp.alphas[x]
         var mstar = BInt(0)
         for i in 0...(coeffs.count-1) {
-            mstar = (mstar + coeffs[i] * alpha ** i).mod(domain.order)
+            mstar += (coeffs[i] * alpha ** i).mod(domain.order)
         }
         //add v_i * m^star(alpha_i) * codeWord[i] to sum
         let vm = (pp.vs[x - 1] * mstar).mod(domain.order)
@@ -165,8 +168,8 @@ func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<
     let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
 
     //this evaluates the same polynomial twice, can be made more efficient
-    let U = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: C)
-    let V = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: comKeys)
+    let V = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: C)
+    let U = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: comKeys)
     
     //prove correctness
     let pi = try NIZKDLEQProve(exp: privD, a: domain.g, A: pubD, b: U, B: V)
@@ -184,9 +187,8 @@ func verifyPVSS(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: Array<
     }
     let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
     
-    let U = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: C)
-    let V = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: comKeys)
-    
+    let V = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: C)
+    let U = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: comKeys)
     return try NIZKDLEQVerify(a: domain.g, A: pubD, b: U, B: V, pi: pi)
     
 }
@@ -262,10 +264,10 @@ func resharePVSS(
     let Wsum = try scrapeSum(pp: nextPP, coeffs: coeffs)
     let nextW = try domain.multiplyPoint(prevPubD, Wsum)
     
-    print("Wsum",Wsum)
-    print("sharing UVW", nextU, nextV, nextW)
-    print("WHY ARE V AND W THE SAME")
-    print("sharing Y2:", partyPubD)
+//    print("Wsum",Wsum)
+//    print("sharing UVW", nextU, nextV, nextW)
+//    print("WHY ARE V AND W THE SAME")
+//    print("sharing Y2:", partyPubD)
 
     //prove correctness (f)
     let pi = try NIZKReshareProve(w1: comPrivKey, w2: partyPrivD, ga: domain.g, gb: nextV, gc: nextW, Y1: comPubKey, Y2: partyPubD, Y3: nextU)
