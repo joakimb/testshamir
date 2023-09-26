@@ -43,7 +43,8 @@ func setup(t: Int, n: Int) -> PVSSPubParams {
             }
             
             let term = (alphas[i] - alphas[j]).mod(domain.order)
-            v = (v * term).modInverse(domain.order)
+            v = (v * term).mod(domain.order)
+            v = v.modInverse(domain.order)
             
         }
         
@@ -260,8 +261,10 @@ func resharePVSS(
     let nextV = try scrapeSum(pp: nextPP, coeffs: coeffs, codeWord: nextComKeys)
     let Wsum = try scrapeSum(pp: nextPP, coeffs: coeffs)
     let nextW = try domain.multiplyPoint(prevPubD, Wsum)
+    
     print("Wsum",Wsum)
     print("sharing UVW", nextU, nextV, nextW)
+    print("WHY ARE V AND W THE SAME")
     print("sharing Y2:", partyPubD)
 
     //prove correctness (f)

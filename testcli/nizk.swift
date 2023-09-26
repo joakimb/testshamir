@@ -139,7 +139,7 @@ func NIZKReshareVerify(ga: Point, gb: Point, gc: Point, Y1: Point, Y2: Point, Y3
     let z2gb_z1gc = try domain.subtractPoints(z2gb, z1gc)
     let pedersencheck = (R3cY3 == z2gb_z1gc)
     
-    print("check:", DLcheck1,DLcheck2,pedersencheck)
+    //print("check:", DLcheck1,DLcheck2,pedersencheck)
     return (DLcheck1 && DLcheck2 && pedersencheck)
     
 }

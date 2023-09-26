@@ -9,10 +9,12 @@ import Foundation
 import BigInt
 import SwiftECC
 
-let debug = true
+//debug helpers
+let smallCurve = true
+let notRandom = true
 
 let domain: Domain = {
-    if debug {
+    if smallCurve {
         do {
             return try Domain.instance(name: "EC29", p: BInt(29), a: BInt(4), b: BInt(20), gx: BInt(1), gy: BInt(5), order: BInt(37), cofactor: 1)
         } catch {
@@ -25,7 +27,7 @@ let domain: Domain = {
 }()
 
 let byteBufLen: Int = {
-    if debug {
+    if smallCurve {
         return 1
     } else {
         return 32
@@ -34,7 +36,7 @@ let byteBufLen: Int = {
 
 // Rand int mod p
 func randZp() -> BInt {
-    if debug {
+    if notRandom {
         return BInt(5)
     } else {
         return (domain.order - BInt.ONE).randomLessThan() + BInt.ONE

@@ -9,13 +9,13 @@ import Foundation
 import BigInt
 
 // setup
-let t = 4// t+1 needed to reconstruct
-let n = 8
+let t = 1// t+1 needed to reconstruct
+let n = 4
 
 let S = try toPoint(BInt(34))
 print("secret", S)
 let pp = setup(t: t,n: n)
-
+let Bad = try domain.multiplyPoint(domain.g, BInt(6))
 
 //
 //////test ECC shamir
@@ -45,7 +45,7 @@ let pp = setup(t: t,n: n)
 //let b = try toPoint(randZp())
 //let A = try domain.multiplyPoint(a, exp)
 //let B = try domain.multiplyPoint(b, exp)
-//let Bad = try domain.multiplyPoint(b, BInt(6))
+
 //let pieq = try NIZKDLEQProve(exp: exp, a: a, A: A, b: b, B: B)
 //let valideq = try NIZKDLEQVerify(a: a, A: A, b: b, B: B, pi: pieq)
 //print("true dleq nizk:",valideq)
@@ -53,26 +53,26 @@ let pp = setup(t: t,n: n)
 //print("false dleq nizk:",invalideq)
 //
 ////test resharenizk
-//print("RESHARE NIZK FS+++++++++++++++++++++++++++++++++")
-//let w1 = BInt(5)
-//let w2 = BInt(7)
-//let ga = try toPoint(randZp())
-//let gb = try toPoint(randZp())
-//let gc = try toPoint(randZp())
-//let Y1 = try domain.multiplyPoint(ga, w1)
-//let Y2 = try domain.multiplyPoint(ga, w2)
-//let w2gb = try domain.multiplyPoint(gb, w2)
-//let w1gc = try domain.multiplyPoint(gc, w1)
-//let Y3 = try domain.subtractPoints(w2gb, w1gc)
-//let pireshare = try NIZKReshareProve(w1: w1, w2: w2, ga: ga, gb: gb, gc: gc, Y1: Y1, Y2: Y2, Y3: Y3)
-//let validreshare = try NIZKReshareVerify(ga: ga, gb: gb, gc: gc, Y1: Y1, Y2: Y2, Y3: Y3, pi: pireshare)
-//let invalidreshare1 = try NIZKReshareVerify(ga: ga, gb: gb, gc: gc, Y1: Bad, Y2: Y2, Y3: Y3, pi: pireshare)
-//let invalidreshare2 = try NIZKReshareVerify(ga: ga, gb: gb, gc: gc, Y1: Y1, Y2: Bad, Y3: Y3, pi: pireshare)
-//let invalidreshare3 = try NIZKReshareVerify(ga: ga, gb: gb, gc: gc, Y1: Y1, Y2: Y2, Y3: Bad, pi: pireshare)
-//print("true reshare nizk:",validreshare)
-//print("false1 reshare nizk:",invalidreshare1)
-//print("false2 reshare nizk:",invalidreshare2)
-//print("false3 reshare nizk:",invalidreshare3)
+print("RESHARE NIZK FS+++++++++++++++++++++++++++++++++")
+let w1 = BInt(5)
+let w2 = BInt(7)
+let ga = try toPoint(randZp())
+let gb = try toPoint(randZp())
+let gc = try toPoint(randZp())
+let Y1 = try domain.multiplyPoint(ga, w1)
+let Y2 = try domain.multiplyPoint(ga, w2)
+let w2gb = try domain.multiplyPoint(gb, w2)
+let w1gc = try domain.multiplyPoint(gc, w1)
+let Y3 = try domain.subtractPoints(w2gb, w1gc)
+let pireshare = try NIZKReshareProve(w1: w1, w2: w2, ga: ga, gb: gb, gc: gc, Y1: Y1, Y2: Y2, Y3: Y3)
+let validreshare = try NIZKReshareVerify(ga: ga, gb: gb, gc: gc, Y1: Y1, Y2: Y2, Y3: Y3, pi: pireshare)
+let invalidreshare1 = try NIZKReshareVerify(ga: ga, gb: gb, gc: gc, Y1: Bad, Y2: Y2, Y3: Y3, pi: pireshare)
+let invalidreshare2 = try NIZKReshareVerify(ga: ga, gb: gb, gc: gc, Y1: Y1, Y2: Bad, Y3: Y3, pi: pireshare)
+let invalidreshare3 = try NIZKReshareVerify(ga: ga, gb: gb, gc: gc, Y1: Y1, Y2: Y2, Y3: Bad, pi: pireshare)
+print("true reshare nizk:",validreshare)
+print("false1 reshare nizk:",invalidreshare1)
+print("false2 reshare nizk:",invalidreshare2)
+print("false3 reshare nizk:",invalidreshare3)
 
 //test DHPVSS
 print("PVSS+++++++++++++++++++++++++++++++++")
