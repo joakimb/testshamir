@@ -301,3 +301,24 @@ func verifyReshare (partyIndex: Int, curEncShares: Array<Point>, encReshares: Ar
     return validProof
     
 }
+
+func reconstructReshare (pp: PVSSPubParams, validIndexes: Array<Int>, encReShares: Array<Point>) throws -> Point{
+    
+    if validIndexes.count < (pp.t + 1) {
+        print("not enough valid reshares")
+        exit(1)
+    }
+    
+    let alphas = Array(validIndexes[0...t].map{BInt($0)})// first t+1 valid indexes as BInt
+    print("alphas", alphas)
+    
+    var sum = try toPoint(BInt.ZERO)
+    for l in 0...(alphas.count - 1) {
+        let lambda = lagX(alphas: alphas, i: l).mod(domain.order)
+        let lambC = try domain.multiplyPoint(encReShares[validIndexes[l]], lambda)
+        sum = try domain.addPoints(sum,lambC)
+    }
+    
+    return sum
+    //TODO: also reconstruct pk_D.L and return
+}

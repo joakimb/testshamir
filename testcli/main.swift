@@ -142,16 +142,57 @@ for i in 0...(pp.n-1) {
     
 }
 
-//reconstruct shares from resharing
-let newEncShares = Array<Point>()
+// validate resharing
+var validReshareIndexes = Array<Int>()
 for i in 0...(pp.n-1) {
     
     let validReshare = try verifyReshare(partyIndex: i, curEncShares: encShares, encReshares: parties[i].reshares!, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP, prevPubD:firstPubD, reshareComKey: parties[i].comPubKey, reshareDistKey: parties[i].distPubKey, pi: parties[i].reshareProof!)
-    
-    print(validReshare)
+    if (validReshare) {
+        validReshareIndexes.append(i)
+    }
 }
-//for all valid reshares, derive encrypted share
 
+//BELOW IS UNDER DEVELOPMENT
+
+//reconstruct shares from resharing
+var reconstructedReshares = Array<Point>()
+for j in 0...(newPP.n-1) {
+    
+    reconstructedReshares.append(try reconstructReshare(pp: pp, validIndexes:  validReshareIndexes, encReShares: parties.map{$0.reshares![j]}))
+    
+}
+print(reconstructedReshares)
+
+//interpolate key for selected group L of reshares
+var reconDistPubKeys = Array<Point>()
+for i in validReshareIndexes {
+    reconDistPubKeys.append(parties[i].distPubKey)
+}
+let alphas = Array(validReshareIndexes[0...t].map{BInt($0)})// first t+1 valid indexes as BInt
+let prevPubD = try lagPubD(keys: reconDistPubKeys, t: pp.t, alphas: alphas)
+
+//decrypt reconstructred shares
+var decRenconShares = Array<Point>()
+for i in 0...(newPP.n-1) {
+    let (dReShare, repi) = try decPVSSShare(pubD: prevPubD, privC: newParties.map{$0.comPrivKey}[i], pubC: newParties.map{$0.comPubKey}[i], eShare: reconstructedReshares[i])// unnecesary map, remove
+    let goodShare = try verifyDecPVSSShare(pubD: prevPubD, pubC: newParties.map{$0.comPubKey}[i], eShare: reconstructedReshares[i], dShare: dReShare, pi: repi)
+    if (!goodShare) {
+        print("BAD SHARE")
+    } else {
+        decRenconShares.append(dReShare)
+        print("GOOD SHARE!")
+    }
+}
+
+//reconstruct secret again
+let reconReshares = Array(decRenconShares[1...t+1])
+let reconReAlphas = Array(newPP.alphas[2...t+2])
+let reconstructedReSecret = try recPVSS(shares:  reconReshares, t: newPP.t, alphas: reconReAlphas)
+print("shared:", S, "reconreshares:", reconstructedSecret)
+
+//for all valid reshares, derive encrypted share
+//let reconshares = Array(decShares[1...t+1])
+//let reconAlphas = Array(pp.alphas[2...t+2])
 
 
 //
