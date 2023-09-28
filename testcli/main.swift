@@ -103,7 +103,6 @@ let invalidpvss = try verifyPVSS(pp: pp, pubD: S, C: encShares, comKeys: parties
 print("false pvss:",invalidpvss)
 
 //decrypt
-print("decryptshares:")
 var decShares = Array<Point>()
 for i in 0...(n-1) {
     let (dShare, pi) = try decPVSSShare(pubD: firstPubD, privC: parties.map{$0.comPrivKey}[i], pubC: parties.map{$0.comPubKey}[i], eShare: encShares[i])
@@ -123,7 +122,6 @@ print("shared:", S, "recon:", reconstructedSecret)
 
 //new committee
 let newPP = setup(t: pp.t, n: pp.n)
-print("t",pp.t)
 var newParties = Array<Party>()
 
 for _ in 1...newPP.n {
@@ -133,39 +131,34 @@ for _ in 1...newPP.n {
 }
 
 //reshare with pubD from original distributor
-//print("reshare:")
-//print("num coeffs wrong? for reshare")
-//for i in 0...(pp.n-1) {
-//    
-//    // how to bootstrap th pk_D, just use pk_d of first sharing like this?
-//    let (reshares, pi) = try resharePVSS(partyIndex: i, comPrivKey: parties[i].comPrivKey, comPubKey: parties[i].comPubKey, partyPrivD: parties[i].distPrivKey, partyPubD: parties[i].distPubKey, curEncShares: encShares, prevPubD: firstPubD, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP)
-//    
-//    parties[i].reshares = reshares
-//    parties[i].reshareProof = pi
-//    
-//}
+print("reshare:")
+print("num coeffs wrong? for reshare")
+for i in 0...(pp.n-1) {
+    
+    // how to bootstrap th pk_D, just use pk_d of first sharing like this?
+    let (reshares, pi) = try resharePVSS(partyIndex: i, comPrivKey: parties[i].comPrivKey, comPubKey: parties[i].comPubKey, partyPrivD: parties[i].distPrivKey, partyPubD: parties[i].distPubKey, curEncShares: encShares, prevPubD: firstPubD, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP)
+    
+    parties[i].reshares = reshares
+    parties[i].reshareProof = pi
+    
+}
+
+//reconstruct shares from resharing
+let newEncShares = Array<Point>()
+for i in 0...(pp.n-1) {
+    
+    try verifyReshare(partyIndex: i, curEncShares: encShares, encReshares: parties[i].reshares!, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP, prevPubD:firstPubD, reshareComKey: parties[i].comPubKey, reshareDistKey: parties[i].distPubKey, pi: parties[i].reshareProof!)
+    
+}
+//for all valid reshares, derive encrypted share
+
+
+var inf = try toPoint(BInt(0))
+print(inf)
+inf = try domain.multiplyPoint(inf, BInt(7))
+print(inf)
+
 //
-//
-////reconstruct shares from resharing
-//let newEncShares = Array<Point>()
-//for i in 0...(pp.n-1) {
-//    
-//    try reconstructResharesPVSS(partyIndex: i, curEncShares: encShares, reShares: parties[i].reshares!, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP, prevPubD: newParties[i].distPubKey, curComKey: parties[i].comPubKey, pi: parties[i].reshareProof!)
-//    
-//}
-
-//TOMORROW: its the pedersencheck that does not work. invesigate, maybe do by hand, and checkif U V and W are the same at both ends, and if the handleing of pk_D,L is correct.
-//Also consider refactoring and renaming to make the code easier to reasno about to find the bug. AND CHECK IF THE BOOTSTRAPPING ASSUMPTION IF pk_D,L is bonkers (check if DL holds...).
-//AND REMEMBER: it might be that the resharing i wrong, and not the proof. Thest this by doing the reconstruction and checking if you get the correct value. Also, mybe break up inte sub-functions.
-// If nothing else works, it is possible to start a "by-hand" calculation from a set of encrypted shares (constructable from code) since that is the last point we know to be correct.
-
-//print(parties)
-//print(newParties)
-
-
-
-
-
 //var comPubKeys = Array<Point>()
 //var comPrivKeys = Array<BInt>()
 //for _ in 1...n {
