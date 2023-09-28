@@ -320,5 +320,4 @@ func reconstructReshare (pp: PVSSPubParams, validIndexes: Array<Int>, encReShare
     }
     
     return sum
-    //TODO: also reconstruct pk_D.L and return
 }
