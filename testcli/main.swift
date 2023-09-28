@@ -132,7 +132,6 @@ for _ in 1...newPP.n {
 
 //reshare with pubD from original distributor
 print("reshare:")
-print("num coeffs wrong? for reshare")
 for i in 0...(pp.n-1) {
     
     // how to bootstrap th pk_D, just use pk_d of first sharing like this?
@@ -147,16 +146,13 @@ for i in 0...(pp.n-1) {
 let newEncShares = Array<Point>()
 for i in 0...(pp.n-1) {
     
-    try verifyReshare(partyIndex: i, curEncShares: encShares, encReshares: parties[i].reshares!, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP, prevPubD:firstPubD, reshareComKey: parties[i].comPubKey, reshareDistKey: parties[i].distPubKey, pi: parties[i].reshareProof!)
+    let validReshare = try verifyReshare(partyIndex: i, curEncShares: encShares, encReshares: parties[i].reshares!, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP, prevPubD:firstPubD, reshareComKey: parties[i].comPubKey, reshareDistKey: parties[i].distPubKey, pi: parties[i].reshareProof!)
     
+    print(validReshare)
 }
 //for all valid reshares, derive encrypted share
 
 
-var inf = try toPoint(BInt(0))
-print(inf)
-inf = try domain.multiplyPoint(inf, BInt(7))
-print(inf)
 
 //
 //var comPubKeys = Array<Point>()

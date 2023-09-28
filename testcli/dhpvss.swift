@@ -108,21 +108,16 @@ func verifyKey(E: Point, omega: DLProof) throws -> Bool {
 private func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
     
     //let the seed be the hash of the input
-    //let the i:th coefficient be defined as the seed hashed i times (0 for i = 0 )
+    //let the i:th coefficient be defined as the seed hashed i times
     var coeffs = Array<BInt>()
-    //coeffs.append(BInt(0))
     var seed = sha256(data).mod(domain.order)
-//    print("num",num)
-    for _ in 0...(num) {
+    for _ in 0...num {
         
         coeffs.append(seed)
-//        print("loop coeffs",coeffs)
         seed = sha256(seed.asSignedBytes()).mod(domain.order)
         
     }
     
-//    print("coeffs",coeffs)
-            
     return coeffs
     
 }
@@ -152,33 +147,6 @@ private func scrapeSum(n: Int, evalPoints: Array<BInt>, codeCoeffs: Array<BInt>,
     
 }
 
-//private func scrapeSum(pp: PVSSPubParams, coeffs1: Array<BInt>) throws -> BInt {
-//
-//    var coeffs2 = [BInt(19),BInt(10),BInt(7)]
-//    print("coeffs",coeffs2)
-//    //eval poly with hashed coeffs
-//    var sum = BInt(0)
-//    for x in 1...(pp.n) {
-//
-//        print("v",x, pp.vs[x - 1])
-//
-//        //derive mstar
-//        let alpha = pp.alphas[x]
-//        var mstar = BInt(0)
-//        for i in 0...(coeffs2.count-1) {
-//            mstar = (mstar + coeffs2[i] * alpha ** i).mod(domain.order)
-//        }
-//        print("mstar",mstar)
-//        //add v_i * m^star(alpha_i) * codeWord[i] to sum
-//        sum = (sum + pp.vs[x - 1] * mstar).mod(domain.order)
-//        print("intermediatesum:",sum)
-//
-//    }
-//    print("sum",sum)
-//    return sum
-//
-//}
-
 func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<Point>, S: Point) throws -> (encShares: Array<Point>, shareProof: DLEQProof){
     
     //secret share
@@ -200,9 +168,7 @@ func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<
     let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
 
     //this evaluates the same polynomial twice, can be made more efficient
-    //let V = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: C)
     let V = try scrapeSum(n: pp.n, evalPoints: pp.alphas, codeCoeffs: pp.vs, polyCoeffs: coeffs, codeWord: C)
-//    let U = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: comKeys)
     let U = try scrapeSum(n: pp.n, evalPoints: pp.alphas, codeCoeffs: pp.vs, polyCoeffs: coeffs, codeWord: comKeys)
     
     //prove correctness
@@ -221,9 +187,7 @@ func verifyPVSS(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: Array<
     }
     let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
     
-    //let V = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: C)
     let V = try scrapeSum(n: pp.n, evalPoints: pp.alphas, codeCoeffs: pp.vs, polyCoeffs: coeffs, codeWord: C)
-//    let U = try scrapeSum(pp: pp, coeffs: coeffs, codeWord: comKeys)
     let U = try scrapeSum(n: pp.n, evalPoints: pp.alphas, codeCoeffs: pp.vs, polyCoeffs: coeffs, codeWord: comKeys)
     return try NIZKDLEQVerify(a: domain.g, A: pubD, b: U, B: V, pi: pi)
     
@@ -262,10 +226,7 @@ func lagPubD (keys: Array<Point>, t: Int, alphas: Array<BInt>) throws -> Point {
 
 //i:th party cur epoch reshares i:th encryted shares to the next epoch committee, using ints own distkeys, pub params for next epoch and public Dist key pubD from previous epoch
 func resharePVSS(
-    partyIndex: Int, comPrivKey: BInt, comPubKey: Point, partyPrivD: BInt, partyPubD: Point, //resharer
-    curEncShares: Array<Point>, prevPubD: Point, //pubDs: Array<Point>, //comitttee data
-    nextComKeys: Array<Point>, nextPP: PVSSPubParams //next comittee data
-) throws -> (Array<Point>, ReshareProof) {
+    partyIndex: Int, comPrivKey: BInt, comPubKey: Point, partyPrivD: BInt, partyPubD: Point, curEncShares: Array<Point>, prevPubD: Point, nextComKeys: Array<Point>, nextPP: PVSSPubParams ) throws -> (Array<Point>, ReshareProof) {
 
     // decrypt encrypted share (a)
     let decSharedKey = try domain.multiplyPoint(prevPubD,comPrivKey)
@@ -287,8 +248,6 @@ func resharePVSS(
     for i in 0...(curEncShares.count - 1) {
         data = data + toBytes(curEncShares[i])
     }
-    print("resharecoeffs")
-    //TODO: verify that this should really be n-t-2, since it says n-t-1 in the paper
     let coeffs = hashToPolyCoeffs(data: data, num: nextPP.n - nextPP.t - 1)
 
     //derive U, V, W (e)
@@ -297,15 +256,12 @@ func resharePVSS(
         let encShareDiff = try domain.subtractPoints(encReshares[i], curEncShares[partyIndex])
         encShareDiffs.append(encShareDiff)
     }
-//    let nextU = try scrapeSum(pp: nextPP, coeffs: coeffs, codeWord: encShareDiffs)
     let nextU = try scrapeSum(n: nextPP.n, evalPoints: nextPP.betas, codeCoeffs: nextPP.vprimes, polyCoeffs: coeffs, codeWord: encShareDiffs)
-//    let nextV = try scrapeSum(pp: nextPP, coeffs: coeffs, codeWord: nextComKeys)
     let nextV = try scrapeSum(n: nextPP.n, evalPoints: nextPP.betas, codeCoeffs: nextPP.vprimes, polyCoeffs: coeffs, codeWord: nextComKeys)
     var bunchOfSameDistKey = Array<Point>()
     for _ in 1...nextPP.n {
         bunchOfSameDistKey.append(prevPubD)
     }
-//    let nextW = try scrapeSum(pp: nextPP, coeffs: coeffs, codeWord: bunchOfSameDistKey)
     let nextW = try scrapeSum(n: nextPP.n, evalPoints: nextPP.betas, codeCoeffs: nextPP.vprimes, polyCoeffs: coeffs, codeWord: bunchOfSameDistKey)
 
     //prove correctness (f)
@@ -315,39 +271,33 @@ func resharePVSS(
 
 }
 
-func verifyReshare (partyIndex: Int, curEncShares: Array<Point>, encReshares: Array<Point>, nextComKeys: Array<Point>, nextPP: PVSSPubParams, prevPubD: Point, reshareComKey: Point, reshareDistKey: Point, pi: ReshareProof) throws {
+func verifyReshare (partyIndex: Int, curEncShares: Array<Point>, encReshares: Array<Point>, nextComKeys: Array<Point>, nextPP: PVSSPubParams, prevPubD: Point, reshareComKey: Point, reshareDistKey: Point, pi: ReshareProof) throws -> Bool {
     
     
-    //hash to poly coeffs (d)
+    //hash to poly coeffs
     var data = toBytes(prevPubD)
     for i in 0...(curEncShares.count - 1) {
         data = data + toBytes(curEncShares[i])
     }
-    //TODO: verify that this should really be n-t-2, since it says n-t-1 in the paper
     let coeffs = hashToPolyCoeffs(data: data, num: nextPP.n - nextPP.t - 1)
 
-    //derive U, V, W (e)
+    //derive U, V, W
     var encShareDiffs = Array<Point>()
     for i in 0...(nextPP.n - 1) {
         let encShareDiff = try domain.subtractPoints(encReshares[i], curEncShares[partyIndex])
         encShareDiffs.append(encShareDiff)
     }
-//    let nextU = try scrapeSum(pp: nextPP, coeffs: coeffs, codeWord: encShareDiffs)
     let nextU = try scrapeSum(n: nextPP.n, evalPoints: nextPP.betas, codeCoeffs: nextPP.vprimes, polyCoeffs: coeffs, codeWord: encShareDiffs)
-//    let nextV = try scrapeSum(pp: nextPP, coeffs: coeffs, codeWord: nextComKeys)
     let nextV = try scrapeSum(n: nextPP.n, evalPoints: nextPP.betas, codeCoeffs: nextPP.vprimes, polyCoeffs: coeffs, codeWord: nextComKeys)
     var bunchOfSameDistKey = Array<Point>()
     for _ in 1...nextPP.n {
         bunchOfSameDistKey.append(prevPubD)
     }
-//    let nextW = try scrapeSum(pp: nextPP, coeffs: coeffs, codeWord: bunchOfSameDistKey)
     let nextW = try scrapeSum(n: nextPP.n, evalPoints: nextPP.betas, codeCoeffs: nextPP.vprimes, polyCoeffs: coeffs, codeWord: bunchOfSameDistKey)
 
     //verify proof (a).ii
     let validProof = try NIZKReshareVerify(ga: domain.g, gb: nextV, gc: nextW, Y1: reshareComKey, Y2: reshareDistKey, Y3: nextU, pi: pi)
-    print("reshareproof",validProof)
-    print("recon UVW", nextU, nextV, nextW)
 
-    //return if reshare is valid
+    return validProof
     
 }
