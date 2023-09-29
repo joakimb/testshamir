@@ -258,18 +258,18 @@ func resharePVSS(
         
         let scrapeTerms = try genScrapeSumTerms(n: nextPP.n, evalPoints: nextPP.betas, codeCoeffs: nextPP.vprimes, polyCoeffs: coeffs)
         
-        let nextU = try zip(encShareDiffs, scrapeTerms)
+        let Uprime = try zip(encShareDiffs, scrapeTerms)
             .map{try domain.multiplyPoint($0, $1)}
             .reduce(zeroPoint){ try domain.addPoints($0,$1)}
-        let nextV = try zip(nextComKeys, scrapeTerms)
+        let Vprime = try zip(nextComKeys, scrapeTerms)
             .map{try domain.multiplyPoint($0, $1)}
             .reduce(zeroPoint){ try domain.addPoints($0,$1)}
         let Wsum = scrapeTerms.reduce(BInt.ZERO){$0 + $1}
-        let nextW = try domain.multiplyPoint(prevPubD, Wsum)
+        let Wprime = try domain.multiplyPoint(prevPubD, Wsum)
         
         //prove correctness (f)
         
-        let pi = try NIZKReshareProve(w1: comPrivKey, w2: partyPrivD, ga: domain.g, gb: nextV, gc: nextW, Y1: comPubKey, Y2: partyPubD, Y3: nextU)
+        let pi = try NIZKReshareProve(w1: comPrivKey, w2: partyPrivD, ga: domain.g, gb: Vprime, gc: Wprime, Y1: comPubKey, Y2: partyPubD, Y3: Uprime)
         
         return (encReshares, pi)
         
@@ -300,18 +300,18 @@ func verifyReshare (partyIndex: Int, curEncShares: Array<Point>, encReshares: Ar
     
     let scrapeTerms = try genScrapeSumTerms(n: nextPP.n, evalPoints: nextPP.betas, codeCoeffs: nextPP.vprimes, polyCoeffs: coeffs)
     
-    let nextU = try zip(encShareDiffs, scrapeTerms)
+    let Uprime = try zip(encShareDiffs, scrapeTerms)
         .map{try domain.multiplyPoint($0, $1)}
         .reduce(zeroPoint){ try domain.addPoints($0,$1)}
-    let nextV = try zip(nextComKeys, scrapeTerms)
+    let Vprime = try zip(nextComKeys, scrapeTerms)
         .map{try domain.multiplyPoint($0, $1)}
         .reduce(zeroPoint){ try domain.addPoints($0,$1)}
     let Wsum = scrapeTerms.reduce(BInt.ZERO){$0 + $1}
-    let nextW = try domain.multiplyPoint(prevPubD, Wsum)
+    let Wprime = try domain.multiplyPoint(prevPubD, Wsum)
     
     //verify proof (a).ii
     
-    let validProof = try NIZKReshareVerify(ga: domain.g, gb: nextV, gc: nextW, Y1: reshareComKey, Y2: reshareDistKey, Y3: nextU, pi: pi)
+    let validProof = try NIZKReshareVerify(ga: domain.g, gb: Vprime, gc: Wprime, Y1: reshareComKey, Y2: reshareDistKey, Y3: Uprime, pi: pi)
     
     return validProof
     
@@ -320,18 +320,22 @@ func verifyReshare (partyIndex: Int, curEncShares: Array<Point>, encReshares: Ar
 func reconstructReshare (pp: PVSSPubParams, validIndexes: Array<Int>, encReShares: Array<Point>) throws -> Point{
     
     if validIndexes.count < (pp.t + 1) {
+        
         print("not enough valid reshares")
         exit(1)
+        
     }
     
     let alphas = Array(validIndexes[0...t].map{BInt($0)})// first t+1 valid indexes as BInt
-    print("alphas", alphas)
     
-    var sum = try toPoint(BInt.ZERO)
+    var sum = zeroPoint
+    
     for l in 0...(alphas.count - 1) {
+        
         let lambda = lagX(alphas: alphas, i: l).mod(domain.order)
         let lambC = try domain.multiplyPoint(encReShares[validIndexes[l]], lambda)
         sum = try domain.addPoints(sum,lambC)
+        
     }
     
     return sum
