@@ -147,12 +147,14 @@ var validReshareIndexes = Array<Int>()
 for i in 0...(pp.n-1) {
     
     let validReshare = try verifyReshare(partyIndex: i, curEncShares: encShares, encReshares: parties[i].reshares!, nextComKeys: newParties.map{$0.comPubKey}, nextPP: newPP, prevPubD:firstPubD, reshareComKey: parties[i].comPubKey, reshareDistKey: parties[i].distPubKey, pi: parties[i].reshareProof!)
+    
+    print("true reshare", validReshare)
+    
     if (validReshare) {
         validReshareIndexes.append(i)
     }
+    
 }
-
-//BELOW IS UNDER DEVELOPMENT
 
 //reconstruct shares from resharing
 var reconstructedReshares = Array<Point>()
@@ -189,20 +191,6 @@ let reconReshares = Array(decRenconShares[1...t+1])
 let reconReAlphas = Array(newPP.alphas[2...t+2])
 let reconstructedReSecret = try recPVSS(shares:  reconReshares, t: newPP.t, alphas: reconReAlphas)
 print("shared:", S, "reconreshares:", reconstructedSecret)
-
-//for all valid reshares, derive encrypted share
-//let reconshares = Array(decShares[1...t+1])
-//let reconAlphas = Array(pp.alphas[2...t+2])
-
-
-//
-//var comPubKeys = Array<Point>()
-//var comPrivKeys = Array<BInt>()
-//for _ in 1...n {
-//    let (privKey, pubKey) = try keyGen()
-//    comPubKeys.append(pubKey.E)
-//    comPrivKeys.append(privKey)
-//}
 
 
 //TODO: make a second reshare with pubD derived from prev com pubD keys

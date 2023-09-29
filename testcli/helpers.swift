@@ -114,3 +114,20 @@ func sha256(_ bytes: Array<UInt8>) -> BInt {
     return binthash!
     
 }
+
+func hashToPolyCoeffs(data: Array<UInt8>, degree: Int) -> Array<BInt> {
+    
+    //let the seed be the hash of the input and the i:th coefficient be defined as the seed hashed i times
+    var coeffs = Array<BInt>()
+    var seed = sha256(data).mod(domain.order)
+    
+    for _ in 0...degree {
+        
+        coeffs.append(seed)
+        seed = sha256(seed.asSignedBytes()).mod(domain.order)
+        
+    }
+    
+    return coeffs
+    
+}

@@ -21,6 +21,33 @@ struct PVSSPubParams {
     
 }
 
+private func deriveScrapeCoeffs(from: Int, to: Int, evaluationPoints: Array<BInt>) -> Array<BInt> {
+    
+    var coeffs = Array<BInt>()
+    
+    for i in 1...n {
+        
+        var coeff = BInt(1)
+        
+        for j in from...to {
+            
+            if (i == j){
+                continue
+            }
+            
+            let term = (evaluationPoints[i] - evaluationPoints[j]).mod(domain.order).modInverse(domain.order)
+            coeff = (coeff * term).mod(domain.order)
+            
+        }
+        
+        coeffs.append(coeff)
+        
+    }
+ 
+    return coeffs
+    
+}
+
 func setup(t: Int, n: Int) -> PVSSPubParams {
     
     guard ((n - t - 2) > 0) else {
@@ -32,49 +59,14 @@ func setup(t: Int, n: Int) -> PVSSPubParams {
     for i in 0...n {
         alphas.append(BInt(i))
     }
-    
-    var vs = Array<BInt>()
-    for i in 1...n {
-        
-        var v = BInt(1)
-        
-        for j in 1...n {
-            
-            if (i == j){
-                continue
-            }
-            
-            let term = (alphas[i] - alphas[j]).mod(domain.order).modInverse(domain.order)
-            v = (v * term).mod(domain.order)
-            
-        }
-        vs.append(v)
-        
-    }
-    
+   
     var betas = Array<BInt>()//(0...n)
     for i in 0...n {
         betas.append(BInt(i))
     }
     
-    var vprimes = Array<BInt>()
-    for i in 1...n {//vprime_0 never used
-        
-        var v = BInt(1)
-        
-        for j in 0...n {
-            
-            if (i == j){
-                continue
-            }
-            
-            let term = (betas[i] - betas[j]).mod(domain.order).modInverse(domain.order)
-            v = (v * term).mod(domain.order)
-            
-        }
-        vprimes.append(v)
-        
-    }
+    let vs = deriveScrapeCoeffs(from: 1, to: n, evaluationPoints: alphas)
+    let vprimes = deriveScrapeCoeffs(from: 0, to: n, evaluationPoints: betas)
     
     return PVSSPubParams(t: t, n: n, alphas: alphas, betas: betas, vs: vs, vprimes: vprimes)
     
@@ -89,12 +81,13 @@ func dKeyGen() throws  -> (privD: BInt, pubD: Point) {
     
 }
 
-func keyGen() throws -> (priv: BInt, pub: (E: Point, omega: DLProof)) {//skipping "id" parameter in omega, seems unused
+func keyGen() throws -> (priv: BInt, pub: (E: Point, omega: DLProof)) {//skipping "id" parameter in omega
      
     let priv = randZp()
     let E = try toPoint(priv)
     let omega = try NIZKDLProve(priv)
     let pub = (E: E, omega: omega)
+    
     return (priv: priv, pub: pub)
     
 }
@@ -105,40 +98,24 @@ func verifyKey(E: Point, omega: DLProof) throws -> Bool {
     
 }
 
-private func hashToPolyCoeffs(data: Array<UInt8>, num: Int) -> Array<BInt> {
-    
-    //let the seed be the hash of the input
-    //let the i:th coefficient be defined as the seed hashed i times
-    var coeffs = Array<BInt>()
-    var seed = sha256(data).mod(domain.order)
-    for _ in 0...num {
-        
-        coeffs.append(seed)
-        seed = sha256(seed.asSignedBytes()).mod(domain.order)
-        
-    }
-    
-    return coeffs
-    
-}
-
-
-
 private func scrapeSum(n: Int, evalPoints: Array<BInt>, codeCoeffs: Array<BInt>, polyCoeffs: Array<BInt>, codeWord: Array<Point>) throws -> Point {
     
-    //eval poly with hashed coeffs
     var sum = try toPoint(BInt(0))
+    
     for x in 1...(pp.n) {
         
-        //derive mstar
         let evalPoint = evalPoints[x]
-        var mstar = BInt(0)
+        var polyEval = BInt(0)
+        
         for i in 0...(polyCoeffs.count-1) {
-            mstar += (polyCoeffs[i] * evalPoint ** i).mod(domain.order)
+            
+            polyEval += (polyCoeffs[i] * evalPoint ** i).mod(domain.order)
+            
         }
-        //add v_i * m^star(alpha_i) * codeWord[i] to sum
-        let vm = (codeCoeffs[x - 1] * mstar).mod(domain.order)
-        let term = try domain.multiplyPoint(codeWord[x - 1], vm)
+        
+        let intPart = (codeCoeffs[x - 1] * polyEval).mod(domain.order)
+        let term = try domain.multiplyPoint(codeWord[x - 1], intPart)
+        
         sum = try domain.addPoints(sum, term)
         
     }
@@ -165,7 +142,7 @@ func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<
     for i in 0...(comKeys.count - 1) {
         data = data + toBytes(comKeys[i]) + toBytes(C[i])
     }
-    let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
+    let coeffs = hashToPolyCoeffs(data: data, degree: pp.n - pp.t - 2)
 
     //this evaluates the same polynomial twice, can be made more efficient
     let V = try scrapeSum(n: pp.n, evalPoints: pp.alphas, codeCoeffs: pp.vs, polyCoeffs: coeffs, codeWord: C)
@@ -185,7 +162,7 @@ func verifyPVSS(pp: PVSSPubParams, pubD: Point, C: Array<Point>, comKeys: Array<
     for i in 0...(comKeys.count - 1) {
         data = data + toBytes(comKeys[i]) + toBytes(C[i])
     }
-    let coeffs = hashToPolyCoeffs(data: data, num: pp.n - pp.t - 2)
+    let coeffs = hashToPolyCoeffs(data: data, degree: pp.n - pp.t - 2)
     
     let V = try scrapeSum(n: pp.n, evalPoints: pp.alphas, codeCoeffs: pp.vs, polyCoeffs: coeffs, codeWord: C)
     let U = try scrapeSum(n: pp.n, evalPoints: pp.alphas, codeCoeffs: pp.vs, polyCoeffs: coeffs, codeWord: comKeys)
@@ -248,7 +225,7 @@ func resharePVSS(
     for i in 0...(curEncShares.count - 1) {
         data = data + toBytes(curEncShares[i])
     }
-    let coeffs = hashToPolyCoeffs(data: data, num: nextPP.n - nextPP.t - 1)
+    let coeffs = hashToPolyCoeffs(data: data, degree: nextPP.n - nextPP.t - 1)
 
     //derive U, V, W (e)
     var encShareDiffs = Array<Point>()
@@ -279,7 +256,7 @@ func verifyReshare (partyIndex: Int, curEncShares: Array<Point>, encReshares: Ar
     for i in 0...(curEncShares.count - 1) {
         data = data + toBytes(curEncShares[i])
     }
-    let coeffs = hashToPolyCoeffs(data: data, num: nextPP.n - nextPP.t - 1)
+    let coeffs = hashToPolyCoeffs(data: data, degree: nextPP.n - nextPP.t - 1)
 
     //derive U, V, W
     var encShareDiffs = Array<Point>()
