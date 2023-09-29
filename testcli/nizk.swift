@@ -8,8 +8,6 @@
 import Foundation
 import BigInt
 import SwiftECC
-//fiat shamir schnorr from:
-//https://crypto.stanford.edu/cs355/19sp/lec5.pdf
 
 struct DLProof {
 
@@ -93,7 +91,7 @@ func NIZKDLEQVerify(a: Point, A: Point, b: Point, B: Point, pi: DLEQProof) throw
 
 }
 
-//prove knowledge of w_1 and w_2 so that Y_1 = g_a^w_1 && Y_2 = g_a^w_2 && Y_3 = (g_b^w_2 * g_c ^ -w_1), note that Y3 is a pdersen commitment
+//prove knowledge of w_1 and w_2 so that Y_1 = g_a^w_1 && Y_2 = g_a^w_2 && Y_3 = (g_b^w_2 * g_c ^ -w_1), note that Y3 is a pedersen commitment
 func NIZKReshareProve(w1: BInt, w2: BInt, ga: Point, gb: Point, gc: Point, Y1: Point, Y2: Point, Y3: Point) throws -> ReshareProof {
     
     let r1 = randZp()
@@ -106,8 +104,7 @@ func NIZKReshareProve(w1: BInt, w2: BInt, ga: Point, gb: Point, gc: Point, Y1: P
     
     let bytes = toBytes(ga) + toBytes(gb) + toBytes(gc) + toBytes(Y1) + toBytes(Y2) + toBytes(Y3) + toBytes(R1) + toBytes(R2) + toBytes(R3)
     let c = sha256(bytes).mod(domain.order)
-//    print("c prove from:",ga,gb,gc,Y1,Y2,Y3,R1,R2,R3)
-//    print("c prove",c)
+    
     let z1 = (r1 + c * w1).mod(domain.order)
     let z2 = (r2 + c * w2).mod(domain.order)
     
@@ -119,8 +116,7 @@ func NIZKReshareVerify(ga: Point, gb: Point, gc: Point, Y1: Point, Y2: Point, Y3
     
     let bytes = toBytes(ga) + toBytes(gb) + toBytes(gc) + toBytes(Y1) + toBytes(Y2) + toBytes(Y3) + toBytes(pi.R1) + toBytes(pi.R2) + toBytes(pi.R3)
     let c = sha256(bytes).mod(domain.order)
-//    print("c verif from:",ga,gb,gc,Y1,Y2,Y3,pi.R1,pi.R2,pi.R3)
-//    print("c verif",c)
+    
     //check dl for Y1
     let cY1 = try domain.multiplyPoint(Y1, c)
     let R1cY1 = try domain.addPoints(pi.R1, cY1)
@@ -141,7 +137,6 @@ func NIZKReshareVerify(ga: Point, gb: Point, gc: Point, Y1: Point, Y2: Point, Y3
     let z2gb_z1gc = try domain.subtractPoints(z2gb, z1gc)
     let pedersencheck = (R3cY3 == z2gb_z1gc)
     
-//    print("check:", DLcheck1,DLcheck2,pedersencheck)
     return (DLcheck1 && DLcheck2 && pedersencheck)
     
 }
