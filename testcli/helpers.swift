@@ -36,6 +36,15 @@ let domain: Domain = {
     
 }()
 
+let zeroPoint = {
+    do {
+        return try toPoint(BInt(0))
+    } catch {
+        print("zero point error")
+        return domain.g
+    }
+}()
+
 let byteBufLen: Int = {
     
     if smallCurve {
@@ -129,5 +138,32 @@ func hashToPolyCoeffs(data: Array<UInt8>, degree: Int) -> Array<BInt> {
     }
     
     return coeffs
+    
+}
+
+func genScrapeSumTerms(n: Int, evalPoints: Array<BInt>, codeCoeffs: Array<BInt>, polyCoeffs: Array<BInt>) throws -> Array<BInt> {
+    
+    var terms = Array<BInt>()
+    
+    for x in 1...(pp.n) {
+        
+        let evalPoint = evalPoints[x]
+        var polyEval = BInt(0)
+        
+        for i in 0...(polyCoeffs.count-1) {
+            
+            polyEval += (polyCoeffs[i] * evalPoint ** i).mod(domain.order)
+            
+        }
+        
+        let term = (codeCoeffs[x - 1] * polyEval).mod(domain.order)
+        terms.append(term)
+//        let term = try domain.multiplyPoint(codeWord[x - 1], intPart)
+        
+//        sum = try domain.addPoints(sum, term)
+        
+    }
+    
+    return terms
     
 }
