@@ -26,7 +26,7 @@ private func deriveScrapeCoeffs(from: Int, to: Int, evaluationPoints: Array<BInt
     var coeffs = Array<BInt>()
     
     for i in 1...n {
-        
+
         var coeff = BInt(1)
         
         for j in from...to {

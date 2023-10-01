@@ -47,9 +47,10 @@ func lagX(alphas: Array<BInt>, i: Int) -> BInt {
         
         if (i == j){ continue}
         
-        let nom = BInt.ZERO - alphas[j]
-        let den = alphas[i] - alphas[j]
-        let frac = nom * den.modInverse(domain.order)
+        
+        let nom = (BInt.ZERO - alphas[j]).mod(domain.order)
+        let den = (alphas[i] - alphas[j]).mod(domain.order)
+        let frac = (nom * den.modInverse(domain.order)).mod(domain.order)
         prod *= frac.mod(domain.order)
         
     }

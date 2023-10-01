@@ -122,6 +122,7 @@ print("shared:", S, "recon:", reconstructedSecret)
 
 //new committee
 let newPP = setup(t: pp.t, n: pp.n)
+print(pp.t,pp.n,newPP)
 var newParties = Array<Party>()
 
 for _ in 1...newPP.n {
