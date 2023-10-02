@@ -98,33 +98,6 @@ func verifyKey(E: Point, omega: DLProof) throws -> Bool {
     
 }
 
-private func scrapeSum(n: Int, evalPoints: Array<BInt>, codeCoeffs: Array<BInt>, polyCoeffs: Array<BInt>, codeWord: Array<Point>) throws -> Point {
-    
-    //consider braking out to generate term in array, allows doing once
-    var sum = zeroPoint
-    
-    for x in 1...(pp.n) {
-        
-        let evalPoint = evalPoints[x]
-        var polyEval = BInt(0)
-        
-        for i in 0...(polyCoeffs.count-1) {
-            
-            polyEval += (polyCoeffs[i] * evalPoint ** i).mod(domain.order)
-            
-        }
-        
-        let intPart = (codeCoeffs[x - 1] * polyEval).mod(domain.order)
-        let term = try domain.multiplyPoint(codeWord[x - 1], intPart)
-        
-        sum = try domain.addPoints(sum, term)
-        
-    }
-    
-    return sum
-    
-}
-
 func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<Point>, S: Point) throws -> (encShares: Array<Point>, shareProof: DLEQProof){
     
     //secret share
