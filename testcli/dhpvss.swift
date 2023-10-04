@@ -118,6 +118,7 @@ func distributePVSS(pp: PVSSPubParams, privD: BInt, pubD: Point, comKeys: Array<
         data = data + toBytes(comKeys[i]) + toBytes(C[i])
     }
     
+    print("num poly coeffs",pp.n - pp.t - 2)
     let coeffs = hashToPolyCoeffs(data: data, degree: pp.n - pp.t - 2)
     
     let scrapeTerms = try genScrapeSumTerms(n: pp.n, evalPoints: pp.alphas, codeCoeffs: pp.vs, polyCoeffs: coeffs)

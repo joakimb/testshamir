@@ -10,7 +10,7 @@ import BigInt
 
 // setup
 let t = 1// t+1 needed to reconstruct
-let n = 4
+let n = 5
 
 let S = try toPoint(randZp())
 print("secret", S)
