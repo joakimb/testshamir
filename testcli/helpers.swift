@@ -11,7 +11,7 @@ import SwiftECC
 
 //debug helpers
 let smallCurve = true
-let notRandom = false
+let notRandom = true
 
 let domain: Domain = {
     
@@ -145,7 +145,7 @@ func genScrapeSumTerms(n: Int, evalPoints: Array<BInt>, codeCoeffs: Array<BInt>,
     
     var terms = Array<BInt>()
     
-    for x in 1...(pp.n) {
+    for x in 1...(n) {
         
         let evalPoint = evalPoints[x]
         var polyEval = BInt(0)
@@ -158,9 +158,6 @@ func genScrapeSumTerms(n: Int, evalPoints: Array<BInt>, codeCoeffs: Array<BInt>,
         
         let term = (codeCoeffs[x - 1] * polyEval).mod(domain.order)
         terms.append(term)
-//        let term = try domain.multiplyPoint(codeWord[x - 1], intPart)
-        
-//        sum = try domain.addPoints(sum, term)
         
     }
     
