@@ -11,7 +11,7 @@ import SwiftECC
 
 //debug helpers
 let smallCurve = false
-let notRandom = false
+let notRandom = true
 
 let domain: Domain = {
     

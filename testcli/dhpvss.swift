@@ -310,6 +310,7 @@ func reconstructReshare (pp: PVSSPubParams, selectedIndexes: Array<Int>, selecte
 //    for l in 0...(alphas.count - 1) {
     for i in 0...selectedIndexes.count-1 {
         let lambda = lagX(alphas: alphas, i: i).mod(domain.order)
+        print("lambda",lambda)
         let lambC = try domain.multiplyPoint(selectedEncReshares[i], lambda)
         sum = try domain.addPoints(sum,lambC)
         

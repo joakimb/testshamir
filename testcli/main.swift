@@ -13,6 +13,8 @@ let t = 1// t+1 needed to reconstruct
 let n = 4
 
 let S = try toPoint(randZp())
+let Sprime = try try domain.multiplyPoint(domain.g, BInt(5))
+print("Sprime",Sprime)
 print("secret", S)
 let pp = setup(t: t,n: n)
 let Bad = try domain.multiplyPoint(domain.g, BInt(6))
@@ -198,6 +200,7 @@ for i in 0...selectedReconParties.count-1 {
 }
 
 print("EXTRACTED RESHARES",selectedReconShares)
+print("val ind", selectedReconIndexes)
 var reconstructedReshares = Array<Point>()
 for j in 0...(newPP.n-1) {
     
