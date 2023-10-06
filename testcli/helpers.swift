@@ -10,8 +10,8 @@ import BigInt
 import SwiftECC
 
 //debug helpers
-let smallCurve = true
-let notRandom = true
+let smallCurve = false
+let notRandom = false
 
 let domain: Domain = {
     
